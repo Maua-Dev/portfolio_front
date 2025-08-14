@@ -1,10 +1,22 @@
 import "./App.css";
+import { BrowserRouter, Route, Routes } from "react-router-dom";
+import Home from "./pages/home";
+import Projects from "./pages/projects";
+import Members from "./pages/members";
+import Events from "./pages/events";
+import NotFound from "./pages/notFound";
 
 function App() {
   return (
-    <div className="h-[100vh] bg-red-200 w-full flex justify-center items-center">
-      <p>Hello World</p>
-    </div>
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<Home />} />
+        <Route path="/projects" element={<Projects />} />
+        <Route path="/members" element={<Members />} />
+        <Route path="/events" element={<Events />} />
+        <Route path="*" element={<NotFound />} />
+      </Routes>
+    </BrowserRouter>
   );
 }
 
