@@ -19,7 +19,8 @@ interface ProjectProps {
 }
 
 function useParallax(value: MotionValue<number>, distance: number) {
-  return useTransform(value, [0, 1], [-distance, 1.9 * distance]);
+  // valor eh o scroll, distancia eh o quanto vc quer de distancia do centro nos extremos, no caso tem q ajustar pra cada caso, e o parametro do meio eh de quanto ate quanto ele vai
+  return useTransform(value, [0, 1], [0, 1.9 * distance]);
 }
 
 export default function Project({ project, side }: ProjectProps) {
