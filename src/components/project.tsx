@@ -22,6 +22,12 @@ function useParallax(value: MotionValue<number>, distance: number) {
   // valor eh o scroll, distancia eh o quanto vc quer de distancia do centro nos extremos, no caso tem q ajustar pra cada caso, e o parametro do meio eh de quanto ate quanto ele vai
   return useTransform(value, [0, 1], [-1.9 * distance, 1.9 * distance]);
 }
+function useParallaxXLeft(value: MotionValue<number>, distance: number) {
+  return useTransform(value, [0, 1], [0, 1.9 * distance]);
+}
+function useParallaxXRight(value: MotionValue<number>, distance: number) {
+  return useTransform(value, [1, 0], [-1.9 * distance, 0]);
+}
 
 export default function Project({ project, side }: ProjectProps) {
   const ref = useRef(null);
@@ -41,12 +47,17 @@ export default function Project({ project, side }: ProjectProps) {
         <motion.img
           src={project.cellImage}
           alt=""
-          initial={{
-            translateX: side === "right" ? 100 : -100,
-            visibility: "hidden",
+          // initial={{
+          //   translateX: side === "right" ? 100 : -100,
+          //   visibility: "hidden",
+          // }}
+          style={{
+            x:
+              side === "right"
+                ? useParallaxXLeft(scrollYProgress, 40)
+                : useParallaxXRight(scrollYProgress, 40),
           }}
-          // style={{ y: useParallax(scrollYProgress, 250) }}
-          whileInView={{ translateX: 0, visibility: "visible" }}
+          // whileInView={{ translateX: 0, visibility: "visible" }}
           className="h-full w-auto"
         />
       </div>
@@ -54,11 +65,12 @@ export default function Project({ project, side }: ProjectProps) {
         <motion.img
           src={project.image}
           alt=""
-          initial={{
-            translateX: side === "right" ? -100 : 100,
-            visibility: "hidden",
+          style={{
+            x:
+              side === "right"
+                ? useParallaxXRight(scrollYProgress, 50)
+                : useParallaxXLeft(scrollYProgress, 50),
           }}
-          whileInView={{ translateX: 0, visibility: "visible" }}
           className="h-2/6 w-auto mb-1/6"
         />
         <div className="flex flex-col items-start mt-10 w-1/2">

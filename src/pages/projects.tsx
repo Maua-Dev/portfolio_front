@@ -57,7 +57,7 @@ const projects = [
 
 export default function Projects() {
   return (
-    <div className="flex flex-col overflow-x-hidden overflow-y-hidden justify-center gap-80 bg-coolWhite min-h-screen">
+    <div className="flex flex-col overflow-x-hidden overflow-y-hidden justify-center gap-32 bg-coolWhite min-h-screen">
       <Navbar />
       {projects.map((project, index) => (
         <motion.div
