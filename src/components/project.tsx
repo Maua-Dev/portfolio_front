@@ -20,7 +20,7 @@ interface ProjectProps {
 
 function useParallax(value: MotionValue<number>, distance: number) {
   // valor eh o scroll, distancia eh o quanto vc quer de distancia do centro nos extremos, no caso tem q ajustar pra cada caso, e o parametro do meio eh de quanto ate quanto ele vai
-  return useTransform(value, [0, 1], [0, 1.9 * distance]);
+  return useTransform(value, [0, 1], [-1.9 * distance, 1.9 * distance]);
 }
 
 export default function Project({ project, side }: ProjectProps) {
@@ -45,7 +45,7 @@ export default function Project({ project, side }: ProjectProps) {
             translateX: side === "right" ? 100 : -100,
             visibility: "hidden",
           }}
-          style={{ y: useParallax(scrollYProgress, 100) }}
+          // style={{ y: useParallax(scrollYProgress, 250) }}
           whileInView={{ translateX: 0, visibility: "visible" }}
           className="h-full w-auto"
         />
@@ -54,6 +54,11 @@ export default function Project({ project, side }: ProjectProps) {
         <motion.img
           src={project.image}
           alt=""
+          initial={{
+            translateX: side === "right" ? -100 : 100,
+            visibility: "hidden",
+          }}
+          whileInView={{ translateX: 0, visibility: "visible" }}
           className="h-2/6 w-auto mb-1/6"
         />
         <div className="flex flex-col items-start mt-10 w-1/2">
@@ -68,11 +73,11 @@ export default function Project({ project, side }: ProjectProps) {
       </div>
       <motion.div
         className={cn(
-          `absolute h-[80%] w-10/11 bottom-0 z-0`,
+          `absolute h-[80%] w-10/11 bottom-0 z-0 duration-75`,
           side === "left" ? "left-0 rounded-r-xl" : "right-0 rounded-l-xl",
         )}
         style={{
-          y: useParallax(scrollYProgress, 300),
+          y: useParallax(scrollYProgress, 200),
           backgroundColor: project.color,
         }}
       />

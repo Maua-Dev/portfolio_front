@@ -32,7 +32,7 @@ const projects = [
     color: "#0080F591",
   },
   {
-    id: "1",
+    id: "3",
     title: "Project 1",
     description:
       "lorem ipsum dolor sit amet, consectetur adipiscing elit. lorem lorem lorem lorem ipsum dolor sit amet, consectetur adipiscing elit.",
@@ -43,7 +43,7 @@ const projects = [
     color: "#AE0404E5",
   },
   {
-    id: "2",
+    id: "4",
     title: "Project 2",
     description:
       "lorem ipsum dolor sit amet, consectetur adipiscing elit. lorem lorem lorem lorem ipsum dolor sit amet, consectetur adipiscing elit.",
@@ -56,7 +56,6 @@ const projects = [
 ];
 
 export default function Projects() {
-
   return (
     <div className="flex flex-col overflow-x-hidden overflow-y-hidden justify-center gap-80 bg-coolWhite min-h-screen">
       <Navbar />
