@@ -32,6 +32,8 @@ function useParallaxXRight(value: MotionValue<number>, distance: number) {
 export default function Project({ project, side }: ProjectProps) {
   const ref = useRef(null);
   const { scrollYProgress } = useScroll({ target: ref });
+  // Opacity: 0 até 0.8, 1 em diante
+  const opacity = useTransform(scrollYProgress, [0.8, 1], [1, 0]);
 
   return (
     <motion.div
@@ -47,17 +49,13 @@ export default function Project({ project, side }: ProjectProps) {
         <motion.img
           src={project.cellImage}
           alt=""
-          // initial={{
-          //   translateX: side === "right" ? 100 : -100,
-          //   visibility: "hidden",
-          // }}
           style={{
+            opacity: opacity,
             x:
               side === "right"
                 ? useParallaxXLeft(scrollYProgress, 40)
                 : useParallaxXRight(scrollYProgress, 40),
           }}
-          // whileInView={{ translateX: 0, visibility: "visible" }}
           className="h-full w-auto"
         />
       </div>
@@ -66,6 +64,7 @@ export default function Project({ project, side }: ProjectProps) {
           src={project.image}
           alt=""
           style={{
+            opacity: opacity,
             x:
               side === "right"
                 ? useParallaxXRight(scrollYProgress, 50)
@@ -85,7 +84,7 @@ export default function Project({ project, side }: ProjectProps) {
       </div>
       <motion.div
         className={cn(
-          `absolute h-[80%] w-10/11 bottom-0 z-0 duration-75`,
+          `absolute h-[90%] w-10/11 bottom-0 z-0 duration-75`,
           side === "left" ? "left-0 rounded-r-xl" : "right-0 rounded-l-xl",
         )}
         style={{
