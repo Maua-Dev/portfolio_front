@@ -3,7 +3,6 @@ import logo from '../assets/logo.png';
 
 export default function Navbar() {
   const navigate = useNavigate();
-
   function goToPage(page: string) {
     navigate(page);
   }
