@@ -13,6 +13,7 @@ export class IacStack extends cdk.Stack {
 
     const stage = process.env.STAGE || 'dev'
     const acmCertificateArn = process.env.ACM_CERTIFICATE_ARN || ''
+    const alternativeDomainName = process.env.ALTERNATIVE_DOMAIN_NAME || ''
 
     const s3Bucket = new s3.Bucket(this, 'PortfolioFrontBucket' + stage, {
       versioned: true,
@@ -40,6 +41,12 @@ export class IacStack extends cdk.Stack {
       )
     }
 
+    let domainNames: string[] = []
+
+    if (alternativeDomainName) {
+      domainNames.push(alternativeDomainName)
+    }
+
     let viewerCertificate =
       cloudfront.ViewerCertificate.fromCloudFrontDefaultCertificate()
 
@@ -51,7 +58,8 @@ export class IacStack extends cdk.Stack {
           acmCertificateArn
         ),
         {
-          securityPolicy: cloudfront.SecurityPolicyProtocol.TLS_V1_2_2021
+          securityPolicy: cloudfront.SecurityPolicyProtocol.TLS_V1_2_2021,
+          aliases: alternativeDomainName ? [alternativeDomainName] : undefined
         }
       )
     }
@@ -83,6 +91,7 @@ export class IacStack extends cdk.Stack {
           }
         ],
         viewerCertificate: viewerCertificate,
+        domainNames: domainNames.length > 0 ? domainNames : undefined,
         errorConfigurations: [
           {
             errorCode: 403,
@@ -122,5 +131,11 @@ export class IacStack extends cdk.Stack {
     new cdk.CfnOutput(this, 'PortfolioFrontDistributionDomainName-' + stage, {
       value: cloudFrontWebDistribution.distributionDomainName
     })
+
+    if (alternativeDomainName) {
+      new cdk.CfnOutput(this, 'PortfolioFrontAlternativeDomainName-' + stage, {
+        value: alternativeDomainName
+      })
+    }
   }
 }
