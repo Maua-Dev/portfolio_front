@@ -1,9 +1,10 @@
 import * as cdk from 'aws-cdk-lib'
 import * as s3 from 'aws-cdk-lib/aws-s3'
 import * as cloudfront from 'aws-cdk-lib/aws-cloudfront'
-import * as origins from 'aws-cdk-lib/aws-cloudfront-origins'
+// import * as origins from 'aws-cdk-lib/aws-cloudfront-origins'
 import { Certificate } from 'aws-cdk-lib/aws-certificatemanager'
 import * as iam from 'aws-cdk-lib/aws-iam'
+
 import { Construct } from 'constructs'
 
 export class IacStack extends cdk.Stack {
@@ -40,61 +41,72 @@ export class IacStack extends cdk.Stack {
       )
     }
 
+    // Permite múltiplos domínios alternativos separados por vírgula
     let domainNames: string[] = []
-    let certificate: Certificate | undefined = undefined
-
-
     if (alternativeDomainName) {
-      domainNames.push(alternativeDomainName)
+      domainNames = alternativeDomainName
+        .split(',')
+        .map((d) => d.trim())
+        .filter(Boolean)
     }
 
+    let viewerCertificate =
+      cloudfront.ViewerCertificate.fromCloudFrontDefaultCertificate()
 
     if (stage === 'dev' || stage === 'homolog' || stage === 'prod') {
-      certificate = Certificate.fromCertificateArn(
-        this,
-        'PortfolioFrontCertificate-' + stage,
-        acmCertificateArn
+      viewerCertificate = cloudfront.ViewerCertificate.fromAcmCertificate(
+        Certificate.fromCertificateArn(
+          this,
+          'PortfolioFrontCertificate-' + stage,
+          acmCertificateArn
+        ),
+        {
+          securityPolicy: cloudfront.SecurityPolicyProtocol.TLS_V1_2_2021,
+          aliases: domainNames.length > 0 ? domainNames : undefined
+        }
       )
-      if (domainNames.length === 0) {
-        console.warn(
-          'Nenhum domain name alternativo definido para stage:',
-          stage
-        )
-      }
     }
 
-    const distribution = new cloudfront.Distribution(this, 'CDN', {
-      comment: 'Portfolio Front Distribution ' + stage,
-      defaultBehavior: {
-        origin: new origins.S3BucketOrigin(s3Bucket),
-        allowedMethods: cloudfront.AllowedMethods.ALLOW_GET_HEAD,
-        compress: true,
-        cachedMethods: cloudfront.CachedMethods.CACHE_GET_HEAD,
-        viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
-        minTtl: cdk.Duration.seconds(0),
-        maxTtl: cdk.Duration.seconds(86400),
-        defaultTtl: cdk.Duration.seconds(3600)
-      },
-      defaultRootObject: 'index.html',
-      certificate: certificate,
-      domainNames: domainNames.length > 0 ? domainNames : undefined,
-      errorResponses: [
-        {
-          httpStatus: 403,
-          responseHttpStatus: 200,
-          responsePagePath: '/index.html',
-          ttl: cdk.Duration.seconds(0)
-        },
-        {
-          httpStatus: 404,
-          responseHttpStatus: 200,
-          responsePagePath: '/index.html',
-          ttl: cdk.Duration.seconds(0)
-        }
-      ]
-    })
+    const cloudFrontWebDistribution = new cloudfront.CloudFrontWebDistribution(
+      this,
+      'CDN',
+      {
+        comment: 'Portfolio Front Distribution ' + stage,
+        originConfigs: [
+          {
+            s3OriginSource: {
+              s3BucketSource: s3Bucket
+            },
+            behaviors: [
+              {
+                isDefaultBehavior: true,
+                allowedMethods: cloudfront.CloudFrontAllowedMethods.GET_HEAD,
+                compress: true,
+                cachedMethods:
+                  cloudfront.CloudFrontAllowedCachedMethods.GET_HEAD,
+                viewerProtocolPolicy:
+                  cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
+                minTtl: cdk.Duration.seconds(0),
+                maxTtl: cdk.Duration.seconds(86400),
+                defaultTtl: cdk.Duration.seconds(3600)
+              }
+            ]
+          }
+        ],
+        viewerCertificate: viewerCertificate,
+        domainNames: domainNames.length > 0 ? domainNames : undefined,
+        errorConfigurations: [
+          {
+            errorCode: 403,
+            responseCode: 200,
+            responsePagePath: '/index.html',
+            errorCachingMinTtl: 0
+          }
+        ]
+      }
+    )
 
-    const cfnDistribution = distribution.node
+    const cfnDistribution = cloudFrontWebDistribution.node
       .defaultChild as cloudfront.CfnDistribution
 
     cfnDistribution.addPropertyOverride(
@@ -107,12 +119,7 @@ export class IacStack extends cdk.Stack {
         effect: iam.Effect.ALLOW,
         actions: ['s3:GetObject'],
         principals: [new iam.ServicePrincipal('cloudfront.amazonaws.com')],
-        resources: [s3Bucket.arnForObjects('*')],
-        conditions: {
-          StringEquals: {
-            'AWS:SourceArn': `arn:aws:cloudfront::${cdk.Aws.ACCOUNT_ID}:distribution/${distribution.distributionId}`
-          }
-        }
+        resources: [s3Bucket.arnForObjects('*')]
       })
     )
 
@@ -121,17 +128,11 @@ export class IacStack extends cdk.Stack {
     })
 
     new cdk.CfnOutput(this, 'PortfolioFrontDistributionId-' + stage, {
-      value: distribution.distributionId
+      value: cloudFrontWebDistribution.distributionId
     })
 
     new cdk.CfnOutput(this, 'PortfolioFrontDistributionDomainName-' + stage, {
-      value: distribution.distributionDomainName
+      value: cloudFrontWebDistribution.distributionDomainName
     })
-
-    if (alternativeDomainName) {
-      new cdk.CfnOutput(this, 'PortfolioFrontAlternativeDomainName-' + stage, {
-        value: alternativeDomainName
-      })
-    }
   }
 }
