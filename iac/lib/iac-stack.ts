@@ -2,7 +2,7 @@ import * as cdk from 'aws-cdk-lib'
 import * as s3 from 'aws-cdk-lib/aws-s3'
 import * as cloudfront from 'aws-cdk-lib/aws-cloudfront'
 // import * as origins from 'aws-cdk-lib/aws-cloudfront-origins'
-// import { Certificate } from 'aws-cdk-lib/aws-certificatemanager'
+import { Certificate } from 'aws-cdk-lib/aws-certificatemanager'
 import * as iam from 'aws-cdk-lib/aws-iam'
 
 import { Construct } from 'constructs'
@@ -12,7 +12,7 @@ export class IacStack extends cdk.Stack {
     super(scope, id, props)
 
     const stage = process.env.STAGE || 'dev'
-    // const acmCertificateArn = process.env.ACM_CERTIFICATE_ARN || ''
+    const acmCertificateArn = process.env.ACM_CERTIFICATE_ARN || ''
 
     const s3Bucket = new s3.Bucket(this, 'PortfolioFrontBucket' + stage, {
       versioned: true,
@@ -31,30 +31,30 @@ export class IacStack extends cdk.Stack {
       }
     })
 
-    // if (
-    //   (stage === 'dev' || stage === 'homolog' || stage === 'prod') &&
-    //   !acmCertificateArn
-    // ) {
-    //   throw new Error(
-    //     `ACM_CERTIFICATE_ARN é obrigatório para o stage: ${stage}`
-    //   )
-    // }
+    if (
+      (stage === 'dev' || stage === 'homolog' || stage === 'prod') &&
+      !acmCertificateArn
+    ) {
+      throw new Error(
+        `ACM_CERTIFICATE_ARN é obrigatório para o stage: ${stage}`
+      )
+    }
 
-    // let viewerCertificate =
-    //   cloudfront.ViewerCertificate.fromCloudFrontDefaultCertificate()
+    let viewerCertificate =
+      cloudfront.ViewerCertificate.fromCloudFrontDefaultCertificate()
 
-    // if (stage === 'dev' || stage === 'homolog' || stage === 'prod') {
-    //   viewerCertificate = cloudfront.ViewerCertificate.fromAcmCertificate(
-    //     Certificate.fromCertificateArn(
-    //       this,
-    //       'PortfolioFrontCertificate-' + stage,
-    //       acmCertificateArn
-    //     ),
-    //     {
-    //       securityPolicy: cloudfront.SecurityPolicyProtocol.TLS_V1_2_2021
-    //     }
-    //   )
-    // }
+    if (stage === 'dev' || stage === 'homolog' || stage === 'prod') {
+      viewerCertificate = cloudfront.ViewerCertificate.fromAcmCertificate(
+        Certificate.fromCertificateArn(
+          this,
+          'PortfolioFrontCertificate-' + stage,
+          acmCertificateArn
+        ),
+        {
+          securityPolicy: cloudfront.SecurityPolicyProtocol.TLS_V1_2_2021
+        }
+      )
+    }
 
     const cloudFrontWebDistribution = new cloudfront.CloudFrontWebDistribution(
       this,
@@ -82,7 +82,7 @@ export class IacStack extends cdk.Stack {
             ]
           }
         ],
-        // viewerCertificate: viewerCertificate,
+        viewerCertificate: viewerCertificate,
         errorConfigurations: [
           {
             errorCode: 403,
