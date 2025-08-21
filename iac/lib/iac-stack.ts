@@ -4,7 +4,6 @@ import * as cloudfront from 'aws-cdk-lib/aws-cloudfront'
 import * as origins from 'aws-cdk-lib/aws-cloudfront-origins'
 import { Certificate } from 'aws-cdk-lib/aws-certificatemanager'
 import * as iam from 'aws-cdk-lib/aws-iam'
-
 import { Construct } from 'constructs'
 
 export class IacStack extends cdk.Stack {
@@ -42,46 +41,42 @@ export class IacStack extends cdk.Stack {
     }
 
     let domainNames: string[] = []
+    let certificate: Certificate | undefined = undefined
+
 
     if (alternativeDomainName) {
       domainNames.push(alternativeDomainName)
     }
 
-    let viewerCertificate =
-      cloudfront.ViewerCertificate.fromCloudFrontDefaultCertificate()
 
     if (stage === 'dev' || stage === 'homolog' || stage === 'prod') {
-      viewerCertificate = cloudfront.ViewerCertificate.fromAcmCertificate(
-        Certificate.fromCertificateArn(
-          this,
-          'PortfolioFrontCertificate-' + stage,
-          acmCertificateArn
-        ),
-        {
-          securityPolicy: cloudfront.SecurityPolicyProtocol.TLS_V1_2_2021,
-          aliases: alternativeDomainName ? [alternativeDomainName] : undefined
-        }
+      certificate = Certificate.fromCertificateArn(
+        this,
+        'PortfolioFrontCertificate-' + stage,
+        acmCertificateArn
       )
+      if (domainNames.length === 0) {
+        console.warn(
+          'Nenhum domain name alternativo definido para stage:',
+          stage
+        )
+      }
     }
 
-    const cloudFrontWebDistribution = new cloudfront.Distribution(this, 'CDN', {
+    const distribution = new cloudfront.Distribution(this, 'CDN', {
       comment: 'Portfolio Front Distribution ' + stage,
       defaultBehavior: {
         origin: new origins.S3BucketOrigin(s3Bucket),
         allowedMethods: cloudfront.AllowedMethods.ALLOW_GET_HEAD,
         compress: true,
         cachedMethods: cloudfront.CachedMethods.CACHE_GET_HEAD,
-        viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS
+        viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
+        minTtl: cdk.Duration.seconds(0),
+        maxTtl: cdk.Duration.seconds(86400),
+        defaultTtl: cdk.Duration.seconds(3600)
       },
       defaultRootObject: 'index.html',
-      certificate:
-        stage !== 'dev' && stage !== 'homolog' && stage !== 'prod'
-          ? undefined
-          : Certificate.fromCertificateArn(
-              this,
-              'PortfolioFrontCertificate-' + stage,
-              acmCertificateArn
-            ),
+      certificate: certificate,
       domainNames: domainNames.length > 0 ? domainNames : undefined,
       errorResponses: [
         {
@@ -89,11 +84,17 @@ export class IacStack extends cdk.Stack {
           responseHttpStatus: 200,
           responsePagePath: '/index.html',
           ttl: cdk.Duration.seconds(0)
+        },
+        {
+          httpStatus: 404,
+          responseHttpStatus: 200,
+          responsePagePath: '/index.html',
+          ttl: cdk.Duration.seconds(0)
         }
       ]
     })
 
-    const cfnDistribution = cloudFrontWebDistribution.node
+    const cfnDistribution = distribution.node
       .defaultChild as cloudfront.CfnDistribution
 
     cfnDistribution.addPropertyOverride(
@@ -106,7 +107,12 @@ export class IacStack extends cdk.Stack {
         effect: iam.Effect.ALLOW,
         actions: ['s3:GetObject'],
         principals: [new iam.ServicePrincipal('cloudfront.amazonaws.com')],
-        resources: [s3Bucket.arnForObjects('*')]
+        resources: [s3Bucket.arnForObjects('*')],
+        conditions: {
+          StringEquals: {
+            'AWS:SourceArn': `arn:aws:cloudfront::${cdk.Aws.ACCOUNT_ID}:distribution/${distribution.distributionId}`
+          }
+        }
       })
     )
 
@@ -115,11 +121,11 @@ export class IacStack extends cdk.Stack {
     })
 
     new cdk.CfnOutput(this, 'PortfolioFrontDistributionId-' + stage, {
-      value: cloudFrontWebDistribution.distributionId
+      value: distribution.distributionId
     })
 
     new cdk.CfnOutput(this, 'PortfolioFrontDistributionDomainName-' + stage, {
-      value: cloudFrontWebDistribution.distributionDomainName
+      value: distribution.distributionDomainName
     })
 
     if (alternativeDomainName) {
