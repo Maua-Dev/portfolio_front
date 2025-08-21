@@ -51,12 +51,13 @@ jobs:
         run: |
           if [[ "${{ github.ref_name }}" == "dev" ]]; then
             echo "STAGE=dev" >> $GITHUB_ENV
-          elif [[ "${{ github.ref_name }}" == "aws-migration" ]]; then
-            echo "STAGE=dev" >> $GITHUB_ENV
+            echo "ACM_CERTIFICATE_ARN=${{ secrets.DEV_ACM_DEVMAUA_CERTIFICATE_ARN }}" >> $GITHUB_ENV
           elif [[ "${{ github.ref_name }}" == "homolog" ]]; then
             echo "STAGE=homolog" >> $GITHUB_ENV
+            echo "ACM_CERTIFICATE_ARN=${{ secrets.HML_ACM_DEVMAUA_CERTIFICATE_ARN }}" >> $GITHUB_ENV
           elif [[ "${{ github.ref_name }}" == "prod" ]]; then
             echo "STAGE=prod" >> $GITHUB_ENV
+            echo "ACM_CERTIFICATE_ARN=${{ secrets.PROD_ACM_DEVMAUA_CERTIFICATE_ARN }}" >> $GITHUB_ENV
           else
             echo "Invalid branch name!" && exit 1
           fi
@@ -74,7 +75,7 @@ jobs:
           echo AWS_REGION=${{ vars.AWS_REGION }} >> $GITHUB_ENV
           echo AWS_ACCOUNT_ID=${{ env.AWS_ACCOUNT_ID }} >> $GITHUB_ENV
           echo STACK_NAME=${{ env.STACK_NAME }} >> $GITHUB_ENV
-          echo ACM_CERTIFICATE_ARN=${{ secrets.DEVMAUA_ACM_CERTIFICATE_ARN }} >> $GITHUB_ENV
+          echo ACM_CERTIFICATE_ARN=${{env.ACM_CERTIFICATE_ARN }} >> $GITHUB_ENV
           echo AWS_BUCKET_ASSETS=${{ vars.AWS_BUCKET_ASSETS }} >> $GITHUB_ENV
       - name: Deploy with CDK
         run: |
