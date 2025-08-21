@@ -31,19 +31,6 @@ export class IacStack extends cdk.Stack {
       }
     })
 
-    const redirectBucket = new s3.Bucket(this, 'RedirectWWWBucket', {
-      bucketName: `www.portfolio.dev.devmaua.com`, // precisa ser único globalmente
-      publicReadAccess: true,
-      removalPolicy: cdk.RemovalPolicy.DESTROY,
-      autoDeleteObjects: true,
-
-      // Configuração de redirect
-      websiteRedirect: {
-        hostName: 'portfolio.dev.devmaua.com',
-        protocol: s3.RedirectProtocol.HTTPS
-      }
-    })
-
     if (
       (stage === 'dev' || stage === 'homolog' || stage === 'prod') &&
       !acmCertificateArn
@@ -134,10 +121,6 @@ export class IacStack extends cdk.Stack {
 
     new cdk.CfnOutput(this, 'PortfolioFrontDistributionDomainName-' + stage, {
       value: cloudFrontWebDistribution.distributionDomainName
-    })
-
-    new cdk.CfnOutput(this, 'RedirectWWWBucketEndpoint', {
-      value: redirectBucket.bucketWebsiteDomainName
     })
   }
 }
