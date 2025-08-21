@@ -64,7 +64,7 @@ jobs:
           else
             echo "Invalid branch name!" && exit 1
           fi
-          echo "STACK_NAME=PortfolioStackFront-${{env.STAGE}}" >> $GITHUB_ENV
+          echo "STACK_NAME=PortfolioStackFront${{env.STAGE}}" >> $GITHUB_ENV
 
       - name: Installing Dependencies
         run: |
@@ -94,12 +94,12 @@ jobs:
 
       - name: Set CloudFront ID
         run: |
-          CLOUD_FRONT_ID=$(aws cloudformation --region ${{env.AWS_REGION}} describe-stacks --stack-name ${{env.STACK_NAME}} --query "Stacks[0].Outputs[?OutputKey=='PortfolioFrontDistributionId-${{env.STAGE}}'].OutputValue" --output text) 
+          CLOUD_FRONT_ID=$(aws cloudformation --region ${{env.AWS_REGION}} describe-stacks --stack-name ${{env.STACK_NAME}} --query "Stacks[0].Outputs[?OutputKey=='PortfolioFrontDistributionId${{env.STAGE}}'].OutputValue" --output text)
           echo "CLOUD_FRONT_ID=$CLOUD_FRONT_ID" >> $GITHUB_ENV
 
       - name: Set AWS Bucket
         run: |
-          AWS_BUCKET=$(aws cloudformation --region ${{env.AWS_REGION}} describe-stacks --stack-name ${{env.STACK_NAME}} --query "Stacks[0].Outputs[?OutputKey=='PortfolioFrontBucketName-${{env.STAGE}}'].OutputValue" --output text)
+          AWS_BUCKET=$(aws cloudformation --region ${{env.AWS_REGION}} describe-stacks --stack-name ${{env.STACK_NAME}} --query "Stacks[0].Outputs[?OutputKey=='PortfolioFrontBucketName${{env.STAGE}}'].OutputValue" --output text)
           echo "AWS_BUCKET=$AWS_BUCKET" >> $GITHUB_ENV
 
       - name: Check if bucket exists
