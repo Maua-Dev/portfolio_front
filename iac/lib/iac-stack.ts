@@ -1,7 +1,7 @@
 import * as cdk from 'aws-cdk-lib'
 import * as s3 from 'aws-cdk-lib/aws-s3'
 import * as cloudfront from 'aws-cdk-lib/aws-cloudfront'
-// import * as origins from 'aws-cdk-lib/aws-cloudfront-origins'
+import * as origins from 'aws-cdk-lib/aws-cloudfront-origins'
 import { Certificate } from 'aws-cdk-lib/aws-certificatemanager'
 import * as iam from 'aws-cdk-lib/aws-iam'
 
@@ -64,44 +64,34 @@ export class IacStack extends cdk.Stack {
       )
     }
 
-    const cloudFrontWebDistribution = new cloudfront.CloudFrontWebDistribution(
-      this,
-      'CDN',
-      {
-        comment: 'Portfolio Front Distribution ' + stage,
-        originConfigs: [
-          {
-            s3OriginSource: {
-              s3BucketSource: s3Bucket
-            },
-            behaviors: [
-              {
-                isDefaultBehavior: true,
-                allowedMethods: cloudfront.CloudFrontAllowedMethods.GET_HEAD,
-                compress: true,
-                cachedMethods:
-                  cloudfront.CloudFrontAllowedCachedMethods.GET_HEAD,
-                viewerProtocolPolicy:
-                  cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
-                minTtl: cdk.Duration.seconds(0),
-                maxTtl: cdk.Duration.seconds(86400),
-                defaultTtl: cdk.Duration.seconds(3600)
-              }
-            ]
-          }
-        ],
-        viewerCertificate: viewerCertificate,
-        domainNames: domainNames.length > 0 ? domainNames : undefined,
-        errorConfigurations: [
-          {
-            errorCode: 403,
-            responseCode: 200,
-            responsePagePath: '/index.html',
-            errorCachingMinTtl: 0
-          }
-        ]
-      }
-    )
+    const cloudFrontWebDistribution = new cloudfront.Distribution(this, 'CDN', {
+      comment: 'Portfolio Front Distribution ' + stage,
+      defaultBehavior: {
+        origin: new origins.S3BucketOrigin(s3Bucket),
+        allowedMethods: cloudfront.AllowedMethods.ALLOW_GET_HEAD,
+        compress: true,
+        cachedMethods: cloudfront.CachedMethods.CACHE_GET_HEAD,
+        viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS
+      },
+      defaultRootObject: 'index.html',
+      certificate:
+        stage !== 'dev' && stage !== 'homolog' && stage !== 'prod'
+          ? undefined
+          : Certificate.fromCertificateArn(
+              this,
+              'PortfolioFrontCertificate-' + stage,
+              acmCertificateArn
+            ),
+      domainNames: domainNames.length > 0 ? domainNames : undefined,
+      errorResponses: [
+        {
+          httpStatus: 403,
+          responseHttpStatus: 200,
+          responsePagePath: '/index.html',
+          ttl: cdk.Duration.seconds(0)
+        }
+      ]
+    })
 
     const cfnDistribution = cloudFrontWebDistribution.node
       .defaultChild as cloudfront.CfnDistribution
