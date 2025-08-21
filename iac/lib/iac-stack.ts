@@ -94,7 +94,6 @@ export class IacStack extends cdk.Stack {
           }
         ],
         viewerCertificate: viewerCertificate,
-        domainNames: domainNames.length > 0 ? domainNames : undefined,
         errorConfigurations: [
           {
             errorCode: 403,
