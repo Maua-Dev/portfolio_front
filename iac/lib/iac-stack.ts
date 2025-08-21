@@ -4,6 +4,8 @@ import * as cloudfront from 'aws-cdk-lib/aws-cloudfront'
 // import * as origins from 'aws-cdk-lib/aws-cloudfront-origins'
 import { Certificate } from 'aws-cdk-lib/aws-certificatemanager'
 import * as iam from 'aws-cdk-lib/aws-iam'
+import * as route53 from 'aws-cdk-lib/aws-route53'
+import * as route53Targets from 'aws-cdk-lib/aws-route53-targets'
 
 import { Construct } from 'constructs'
 
@@ -13,6 +15,7 @@ export class IacStack extends cdk.Stack {
 
     const stage = process.env.STAGE || 'dev'
     const acmCertificateArn = process.env.ACM_CERTIFICATE_ARN || ''
+    const alternativeDomainName = process.env.ALTERNATIVE_DOMAIN_NAME || ''
 
     const s3Bucket = new s3.Bucket(this, 'PortfolioFrontBucket' + stage, {
       versioned: true,
@@ -40,6 +43,18 @@ export class IacStack extends cdk.Stack {
       )
     }
 
+    // Permite múltiplos domínios alternativos separados por vírgula
+    let domainNames: string[] = []
+    if (alternativeDomainName) {
+      domainNames = alternativeDomainName
+        .split(',')
+        .map((d) => d.trim())
+        .filter(Boolean)
+    }
+
+    const hostedZoneId = process.env.HOSTED_ZONE_ID || ''
+    const hostedZoneName = process.env.HOSTED_ZONE_NAME || ''
+
     let viewerCertificate =
       cloudfront.ViewerCertificate.fromCloudFrontDefaultCertificate()
 
@@ -51,7 +66,8 @@ export class IacStack extends cdk.Stack {
           acmCertificateArn
         ),
         {
-          securityPolicy: cloudfront.SecurityPolicyProtocol.TLS_V1_2_2021
+          securityPolicy: cloudfront.SecurityPolicyProtocol.TLS_V1_2_2021,
+          aliases: domainNames.length > 0 ? domainNames : undefined
         }
       )
     }
@@ -110,6 +126,41 @@ export class IacStack extends cdk.Stack {
         resources: [s3Bucket.arnForObjects('*')]
       })
     )
+
+    if (domainNames.length > 0 && hostedZoneId && hostedZoneName) {
+      const hostedZone = route53.HostedZone.fromHostedZoneAttributes(
+        this,
+        'HostedZone',
+        {
+          hostedZoneId: hostedZoneId,
+          zoneName: hostedZoneName
+        }
+      )
+
+      // Criar um registro para cada domain name alternativo
+      domainNames.forEach((domain, index) => {
+        new route53.ARecord(this, `CloudFrontARecord-${stage}-${index}`, {
+          zone: hostedZone,
+          recordName: domain,
+          target: route53.RecordTarget.fromAlias(
+            new route53Targets.CloudFrontTarget(cloudFrontWebDistribution)
+          )
+        })
+
+        // Criar também registro AAAA para IPv6
+        new route53.AaaaRecord(this, `CloudFrontAAAARecord-${stage}-${index}`, {
+          zone: hostedZone,
+          recordName: domain,
+          target: route53.RecordTarget.fromAlias(
+            new route53Targets.CloudFrontTarget(cloudFrontWebDistribution)
+          )
+        })
+      })
+    } else if (domainNames.length > 0) {
+      console.warn(
+        'Domain names alternativos fornecidos, mas HOSTED_ZONE_ID ou HOSTED_ZONE_NAME não configurados. Registros DNS não serão criados.'
+      )
+    }
 
     new cdk.CfnOutput(this, 'PortfolioFrontBucketName-' + stage, {
       value: s3Bucket.bucketName
