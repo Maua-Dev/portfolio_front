@@ -1,3 +1,4 @@
+import { useMemo, useState } from "react";
 import Footer from "../components/footer";
 import InfoComponent from "../components/infoComponent";
 import Navbar from "../components/navbar";
@@ -15,12 +16,29 @@ const images = [
 ];
 
 const members = membersMock.map(({ profileImage, name, area }) => ({
-    profileImage,
-    name,
-    area,
-  }));
+  profileImage,
+  name,
+  area,
+}));
+
+type Filter = "ALL" | "DEV" | "PO" | "UI/UX" | "BUSINESS";
+
+const FILTERS: { label: string; value: Filter }[] = [
+  { label: "Geral", value: "ALL" },
+  { label: "Dev", value: "DEV" },
+  { label: "PO", value: "PO" },
+  { label: "UX/UI", value: "UI/UX" },
+  { label: "Business", value: "BUSINESS" },
+];
 
 export default function Members() {
+  const [filter, setFilter] = useState<Filter>("ALL");
+
+  const filteredMembers = useMemo(() => {
+    if (filter === "ALL") return members;
+    return members.filter((m) => (m.area || "").toUpperCase() === filter);
+  }, [filter]);
+
   return (
     <div className="bg-coolWhite flex flex-col min-h-screen">
       <Navbar />
@@ -35,8 +53,37 @@ export default function Members() {
             </div>
             <InfoComponentImages quantity={2} images={images} />
           </div>
-          <div className="flex flex-col justify-center items-center">
-            <MembersCarousel members={members}/>
+          <div className="flex flex-col justify-center items-center gap-6">
+            <div
+              role="tablist"
+              aria-label="Filtrar membros por área"
+              className="flex flex-wrap items-center justify-center gap-2"
+            >
+              {FILTERS.map(({ label, value }) => {
+                const active = value === filter;
+                return (
+                  <button
+                    key={value}
+                    role="tab"
+                    aria-selected={active}
+                    aria-pressed={active}
+                    onClick={() => setFilter(value)}
+                    className={[
+                      "px-4 py-2 rounded-full border-none bg-transparent text-sm transition-colors font-bold",
+                      active
+                        ? "text-blue-600"
+                        : "text-gray-700 hover:text-black",
+                      "focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+                    ].join(" ")}
+                  >
+                    {label}
+                  </button>
+                );
+              })}
+            </div>
+            <div className="w-full max-w-6xl">
+              <MembersCarousel members={filteredMembers} />
+            </div>
           </div>
         </main>
       </div>
