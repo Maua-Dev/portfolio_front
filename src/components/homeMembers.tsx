@@ -1,5 +1,6 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import membersMock from "../utils/membersMock.json";
+import "../assets/scrollbar.css"; // Importando o CSS para esconder scrollbar
 
 type Member = {
   profileImage: string;
@@ -11,19 +12,16 @@ type Member = {
   email?: string;
 };
 
-const cardsPerPage = 5;
-
 export default function Members() {
   const [members, setMembers] = useState<Member[]>([]);
   const [areas, setAreas] = useState<string[]>(["All"]);
   const [areaFilter, setAreaFilter] = useState("All");
   const [currentPage, setCurrentPage] = useState(0);
+  const [pagesCount, setPagesCount] = useState(1);
+  const carouselRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
-    // Carregar os dados do JSON mockado
     setMembers(membersMock as Member[]);
-
-    // Gerar lista de áreas únicas
     const uniqueAreas = Array.from(new Set(membersMock.map((m) => m.area)));
     setAreas(["All", ...uniqueAreas]);
   }, []);
@@ -33,27 +31,34 @@ export default function Members() {
       ? members
       : members.filter((m) => m.area === areaFilter);
 
-  const totalPages = Math.ceil(filteredMembers.length / cardsPerPage);
-
-  const getCurrentMembers = () => {
-    const start = currentPage * cardsPerPage;
-    const end = start + cardsPerPage;
-    return filteredMembers.slice(start, end);
-  };
-
-  const handleNext = () => {
-    setCurrentPage((prev) => (prev + 1) % totalPages);
-  };
-
-  const handlePrev = () => {
-    setCurrentPage((prev) => (prev - 1 + totalPages) % totalPages);
-  };
-
+  // Atualiza número de páginas e página atual ao redimensionar ou ao rolar
   useEffect(() => {
-    setCurrentPage(0);
-  }, [areaFilter]);
+    const container = carouselRef.current;
+    if (!container) return;
 
-  const currentMembers = getCurrentMembers();
+    const updatePagination = () => {
+      const containerWidth = container.offsetWidth;
+      const totalScrollWidth = container.scrollWidth;
+      const pageCount = Math.ceil(totalScrollWidth / containerWidth);
+      setPagesCount(pageCount);
+    };
+
+    const handleScroll = () => {
+      const containerWidth = container.offsetWidth;
+      const scrollLeft = container.scrollLeft;
+      const current = Math.round(scrollLeft / containerWidth);
+      setCurrentPage(current);
+    };
+
+    updatePagination();
+    container.addEventListener("scroll", handleScroll);
+    window.addEventListener("resize", updatePagination);
+
+    return () => {
+      container.removeEventListener("scroll", handleScroll);
+      window.removeEventListener("resize", updatePagination);
+    };
+  }, [filteredMembers]);
 
   return (
     <section className="py-12 bg-gray-50">
@@ -78,23 +83,14 @@ export default function Members() {
         ))}
       </div>
 
-      {/* Carrossel com botões */}
-      <div className="max-w-7xl mx-auto flex items-center justify-center gap-6 px-4 relative">
-        {/* Botão Anterior */}
-        <button
-          onClick={handlePrev}
-          aria-label="Anterior"
-          className="absolute left-0 z-10 bg-white border border-gray-300 rounded-full p-2 shadow hover:bg-gray-100 transition"
-        >
-          ←
-        </button>
-
-        <div className="flex gap-4 overflow-hidden">
-          {currentMembers.map((m, i) => (
+      {/* Carrossel com scroll */}
+      <div className="w-full overflow-x-auto px-4 scrollbar-hide" ref={carouselRef}>
+        <div className="flex gap-4 flex-nowrap scroll-smooth snap-x snap-mandatory">
+          {filteredMembers.map((m, i) => (
             <div
               key={i}
-              className="bg-white rounded-xl shadow-md p-6 flex flex-col items-center text-center"
-              style={{ width: "220px", minHeight: "250px" }}
+              className="bg-white rounded-xl shadow-md p-6 flex-shrink-0 snap-start flex flex-col items-center text-center
+                min-w-[220px] sm:min-w-[250px] md:min-w-[280px] lg:min-w-[320px] min-h-[250px]"
             >
               <img
                 src={m.profileImage}
@@ -118,27 +114,16 @@ export default function Members() {
             </div>
           ))}
         </div>
-
-        {/* Botão Próximo */}
-        <button
-          onClick={handleNext}
-          aria-label="Próximo"
-          className="absolute right-0 z-10 bg-white border border-gray-300 rounded-full p-2 shadow hover:bg-gray-100 transition"
-        >
-          →
-        </button>
       </div>
 
-      {/* Paginação */}
-      <div className="flex justify-center mt-6 space-x-3">
-        {Array.from({ length: totalPages }).map((_, i) => (
-          <button
+      {/* Bolinhas de paginação */}
+      <div className="flex justify-center mt-6 gap-2">
+        {Array.from({ length: pagesCount }).map((_, i) => (
+          <div
             key={i}
-            onClick={() => setCurrentPage(i)}
-            className={`w-3 h-3 rounded-full transition-colors ${
-              i === currentPage ? "bg-purple-600" : "bg-gray-300"
+            className={`w-3 h-3 rounded-full transition-all duration-300 ${
+              i === currentPage ? "bg-purple-700" : "bg-gray-300"
             }`}
-            aria-label={`Página ${i + 1}`}
           />
         ))}
       </div>
