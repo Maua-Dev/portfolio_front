@@ -1,73 +1,158 @@
 import MemberCard from "./memberCard";
-import { useEffect, useRef, useState, useMemo } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 type Member = { profileImage: string; name: string; area: string };
 type MembersCarouselProps = { members: Member[] };
 
+const VISIBLE_ITEMS = 5;
+const CYCLES = 5;
+const MID_CYCLE = Math.floor(CYCLES / 2);
+const CENTER_OFFSET = Math.floor(VISIBLE_ITEMS / 2);
+
+
 export default function MembersCarousel({ members }: MembersCarouselProps) {
   const trackRef = useRef<HTMLDivElement>(null);
-  const [centerIndex, setCenterIndex] = useState(2);
 
-  const updateCenterIndex = () => {
+  const [centerLogicalIndex, setCenterLogicalIndex] = useState(0);
+  const [instantMode, setInstantMode] = useState(false);
+
+  const scrollTimeout = useRef<number | null>(null);
+  const isJumping = useRef(false);
+
+  const displayMembers = useMemo(() => {
+    if (!members.length) return [];
+    return Array.from({ length: CYCLES }, () => members).flat();
+  }, [members]);
+
+  const itemsPerCycle = members.length;
+
+  const getCardWidth = useCallback(() => {
     const track = trackRef.current;
-    if (!track) return;
-    const cardWidth = track.clientWidth / 5;
-    const scrollLeft = track.scrollLeft;
-    const index = Math.round(scrollLeft / cardWidth);
-    setCenterIndex(index + 2);
-  };
-
-  const scrollByOneCard = (dir: "left" | "right") => {
-    const track = trackRef.current;
-    if (!track) return;
-    const cardWidth = track.clientWidth / 5;
-    const delta = cardWidth * (dir === "left" ? -1 : 1);
-    track.scrollBy({ left: delta, behavior: "smooth" });
-  };
-
-  useEffect(() => {
-    updateCenterIndex();
-    const handleResize = () => updateCenterIndex();
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
+    if (!track) return 0;
+    return track.clientWidth / VISIBLE_ITEMS;
   }, []);
 
-  const augmented = useMemo(() => {
-    const VISIBLE = 5;
-    const diff = Math.max(0, VISIBLE - members.length);
-    const leftPad = Math.floor(diff / 2);
-    const rightPad = Math.ceil(diff / 2);
-    const left = Array.from({ length: leftPad }, (_, i) => ({
-      __spacer: true,
-      key: `l-${i}`,
-    }));
-    const right = Array.from({ length: rightPad }, (_, i) => ({
-      __spacer: true,
-      key: `r-${i}`,
-    }));
-    return [...left, ...members, ...right];
-  }, [members]);
+  const updateCenterLogicalIndex = useCallback(() => {
+  const track = trackRef.current;
+  const w = getCardWidth();
+  if (!track || !w || !itemsPerCycle) return;
+
+  const visualIndexLeft = Math.round(track.scrollLeft / w);
+  const visualIndexCenter = visualIndexLeft + CENTER_OFFSET;
+  const logical =
+    ((visualIndexCenter % itemsPerCycle) + itemsPerCycle) % itemsPerCycle;
+
+  setCenterLogicalIndex(logical);
+}, [getCardWidth, itemsPerCycle]);
+
+
+  const getScrollIndex = () => {
+    const track = trackRef.current;
+    const w = getCardWidth();
+    if (!track || !w) return 0;
+    return track.scrollLeft / w;
+  };
+
+  const jumpWithoutAnimation = useCallback(
+    (left: number) => {
+      const track = trackRef.current;
+      if (!track) return;
+
+      isJumping.current = true;
+      setInstantMode(true);
+
+      const prevSnap = track.style.scrollSnapType;
+      const prevBehavior = track.style.scrollBehavior;
+
+      track.style.scrollSnapType = "none";
+      track.style.scrollBehavior = "auto";
+      track.scrollTo({ left });
+      track.getBoundingClientRect();
+
+      requestAnimationFrame(() => {
+        track.style.scrollSnapType = prevSnap || "";
+        track.style.scrollBehavior = prevBehavior || "";
+        isJumping.current = false;
+        setInstantMode(false);
+        updateCenterLogicalIndex();
+      });
+    },
+    [updateCenterLogicalIndex]
+  );
+
+  const handleScroll = () => {
+    if (isJumping.current) return;
+
+    updateCenterLogicalIndex();
+
+    if (scrollTimeout.current) clearTimeout(scrollTimeout.current);
+    scrollTimeout.current = window.setTimeout(() => {
+      const track = trackRef.current;
+      const w = getCardWidth();
+      if (!track || !w || !itemsPerCycle) return;
+
+      const idx = getScrollIndex();
+      const firstKeep = itemsPerCycle * (MID_CYCLE - 1);
+      const lastKeep = itemsPerCycle * (MID_CYCLE + 1);
+
+      if (idx < firstKeep) {
+        jumpWithoutAnimation(track.scrollLeft + itemsPerCycle * w);
+        return;
+      }
+      if (idx > lastKeep) {
+        jumpWithoutAnimation(track.scrollLeft - itemsPerCycle * w);
+        return;
+      }
+    }, 120);
+  };
 
   useEffect(() => {
-    setCenterIndex(2);
     const track = trackRef.current;
-    if (!track) return;
-    track.scrollTo({ left: 0, behavior: "auto" });
-    requestAnimationFrame(() => updateCenterIndex());
-  }, [members]);
+    if (!track || !displayMembers.length || !itemsPerCycle) return;
+
+    const setInitialPosition = () => {
+      const w = getCardWidth();
+      if (!w) return;
+      const initialLeft = w * itemsPerCycle * MID_CYCLE;
+      jumpWithoutAnimation(initialLeft);
+    };
+    setTimeout(setInitialPosition, 0);
+
+    const handleResize = () => setInitialPosition();
+    window.addEventListener("resize", handleResize);
+
+    return () => {
+      if (scrollTimeout.current) clearTimeout(scrollTimeout.current);
+      window.removeEventListener("resize", handleResize);
+    };
+  }, [displayMembers, itemsPerCycle, getCardWidth, jumpWithoutAnimation]);
+
+  const handleArrowClick = (dir: "left" | "right") => {
+    const track = trackRef.current;
+    const w = getCardWidth();
+    if (!track || !w) return;
+    const newLeft = track.scrollLeft + w * (dir === "left" ? -1 : 1);
+    track.scrollTo({ left: newLeft, behavior: "smooth" });
+  };
+
+  const circularDistance = (a: number, b: number, mod: number) => {
+    let d = ((a - b) % mod + mod) % mod;
+    if (d > mod / 2) d -= mod;
+    return d;
+    };
 
   return (
     <div className="relative w-full">
       <button
         aria-label="Anterior"
-        onClick={() => scrollByOneCard("left")}
+        onClick={() => handleArrowClick("left")}
         className="absolute left-2 top-1/2 -translate-y-1/2 z-10 rounded-full p-2 bg-white/80 shadow hover:bg-white focus:outline-none"
       >
         ‹
       </button>
       <button
         aria-label="Próximo"
-        onClick={() => scrollByOneCard("right")}
+        onClick={() => handleArrowClick("right")}
         className="absolute right-2 top-1/2 -translate-y-1/2 z-10 rounded-full p-2 bg-white/80 shadow hover:bg-white focus:outline-none"
       >
         ›
@@ -75,45 +160,44 @@ export default function MembersCarousel({ members }: MembersCarouselProps) {
 
       <div
         ref={trackRef}
-        onScroll={updateCenterIndex}
+        onScroll={handleScroll}
         className="w-full overflow-x-auto scroll-smooth snap-x snap-mandatory [scrollbar-width:none] [-ms-overflow-style:none] px-4 py-6 pb-20"
-        style={{ WebkitOverflowScrolling: "touch" }}
       >
         <div className="flex items-end gap-2 min-w-full [&::-webkit-scrollbar]:hidden">
-          {augmented.map((item, idx) => {
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            const isSpacer = (item as any).__spacer;
-            const offset = idx - centerIndex;
+          {displayMembers.map((member, idx) => {
+            const logicalIdx =
+              itemsPerCycle > 0
+                ? ((idx % itemsPerCycle) + itemsPerCycle) % itemsPerCycle
+                : 0;
+
+            const dist = circularDistance(
+              logicalIdx,
+              centerLogicalIndex,
+              itemsPerCycle || 1
+            );
+
             const scales = [0.5, 0.75, 1, 0.75, 0.5];
             let scale = 0.5;
-            if (offset >= -2 && offset <= 2) scale = scales[offset + 2];
+            if (dist >= -2 && dist <= 2) scale = scales[dist + 2];
 
             return (
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any
               <div
-                key={
-                  isSpacer
-                    ? (item as any).key
-                    : `${(item as Member).name}-${idx}`
-                }
+                key={`${member.name}-${idx}`}
                 className="basis-1/5 shrink-0 snap-start flex justify-center items-end"
               >
                 <div
-                  className="transition-transform will-change-transform"
+                  className={`${instantMode ? "" : "transition-transform duration-300"} will-change-transform`}
                   style={{
                     transform: `scale(${scale})`,
                     transformOrigin: "bottom center",
+                    transition: instantMode ? "none" : undefined,
                   }}
                 >
-                  {isSpacer ? (
-                    <div className="w-40 h-52 opacity-0 pointer-events-none" />
-                  ) : (
-                    <MemberCard
-                      image={(item as Member).profileImage}
-                      name={(item as Member).name}
-                      area={(item as Member).area}
-                    />
-                  )}
+                  <MemberCard
+                    image={member.profileImage}
+                    name={member.name}
+                    area={member.area}
+                  />
                 </div>
               </div>
             );
