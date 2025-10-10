@@ -69,7 +69,7 @@ export default function Members() {
                     aria-pressed={active}
                     onClick={() => setFilter(value)}
                     className={[
-                      "px-4 py-2 rounded-full border-none bg-transparent text-sm transition-colors font-bold",
+                      "px-4 py-2 rounded-full border-none bg-transparent text-base transition-colors font-bold",
                       active
                         ? "text-blue-600"
                         : "text-gray-700 hover:text-black",
