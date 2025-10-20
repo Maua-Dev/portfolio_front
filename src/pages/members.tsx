@@ -4,10 +4,12 @@ import InfoComponent from "../components/infoComponent";
 import Navbar from "../components/navbar";
 import InfoComponentImages from "../components/infoComponentElements/infoComponentImages";
 import MembersCarousel from "../components/memberCarousel";
+import QuoteCarousel from "../components/quoteCarousel"; // 1. IMPORTADO
 
 import membersImage1 from "../assets/membersImage1.png";
 import membersImage2 from "../assets/membersImage2.png";
 
+// 2. Este JSON deve ser o arquivo que agora inclui o campo "quote"
 import membersMock from "../utils/membersMock.json";
 
 const images = [
@@ -15,6 +17,7 @@ const images = [
   { src: membersImage2, alt: "Membros da dev" },
 ];
 
+// Esta variável 'members' é usada pelo MembersCarousel (o primeiro carrossel)
 const members = membersMock.map(({ profileImage, name, area }) => ({
   profileImage,
   name,
@@ -83,6 +86,12 @@ export default function Members() {
             </div>
             <div className="w-full max-w-6xl">
               <MembersCarousel members={filteredMembers} />
+            </div>
+          </div>
+          <div className="flex flex-col justify-center items-center mb-6">
+            {/* 3. Carrossel de Quotes inserido aqui */}
+            <div className="w-full max-w-6xl mt-12">
+              <QuoteCarousel members={membersMock} />
             </div>
           </div>
         </main>
