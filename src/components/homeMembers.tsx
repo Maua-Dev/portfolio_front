@@ -27,9 +27,7 @@ export default function Members() {
   }, []);
 
   const filteredMembers =
-    areaFilter === "All"
-      ? members
-      : members.filter((m) => m.area === areaFilter);
+    areaFilter === "All" ? members : members.filter((m) => m.area === areaFilter);
 
   // Atualiza número de páginas e página atual ao redimensionar ou ao rolar
   useEffect(() => {
@@ -38,16 +36,25 @@ export default function Members() {
 
     const updatePagination = () => {
       const containerWidth = container.offsetWidth;
+      // proteção contra width = 0
+      if (!containerWidth) {
+        setPagesCount(1);
+        setCurrentPage(0);
+        return;
+      }
       const totalScrollWidth = container.scrollWidth;
-      const pageCount = Math.ceil(totalScrollWidth / containerWidth);
+      const pageCount = Math.max(1, Math.ceil(totalScrollWidth / containerWidth));
       setPagesCount(pageCount);
+      setCurrentPage((prev) => Math.min(prev, pageCount - 1));
     };
 
     const handleScroll = () => {
       const containerWidth = container.offsetWidth;
+      if (!containerWidth) return;
       const scrollLeft = container.scrollLeft;
       const current = Math.round(scrollLeft / containerWidth);
-      setCurrentPage(current);
+      // garantir que o current fique dentro do intervalo válido
+      setCurrentPage((_) => Math.max(0, Math.min(current, Math.max(0, Math.ceil(container.scrollWidth / containerWidth) - 1))));
     };
 
     updatePagination();
@@ -70,13 +77,12 @@ export default function Members() {
           <button
             key={area}
             onClick={() => setAreaFilter(area)}
-            className={`pb-2 text-base font-bold transition-colors
+            className={`pb-2 text-base font-bold transition-colors bg-transparent rounded-none
               ${
                 areaFilter === area
                   ? "text-gray-800 border-b-2 border-purple-700"
                   : "text-gray-600 border-b-2 border-transparent hover:text-gray-800"
               }`}
-            style={{ background: "none", borderRadius: 0 }}
           >
             {area}
           </button>
@@ -88,7 +94,7 @@ export default function Members() {
         <div className="flex gap-4 flex-nowrap scroll-smooth snap-x snap-mandatory">
           {filteredMembers.map((m, i) => (
             <div
-              key={i}
+              key={m.email ?? m.name ?? i}
               className="bg-white rounded-xl shadow-md p-6 flex-shrink-0 snap-start flex flex-col items-center text-center
                 min-w-[220px] sm:min-w-[250px] md:min-w-[280px] lg:min-w-[320px] min-h-[250px]"
             >

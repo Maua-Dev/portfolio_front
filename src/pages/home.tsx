@@ -5,7 +5,7 @@ import HomeProjetos from "../components/homeProject";
 import Membros from "../components/homeMembers";
 import cell2 from "../assets/cellImage2.png";
 import img2 from "../assets/image2.png";
-import { useEffect, useState } from "react";
+import Eventos from "../components/homeEvents";
 
 const projetoMock = {
   id: "1",
@@ -20,26 +20,17 @@ const projetoMock = {
 };
 
 export default function Home() {
-  const [membros, setMembros] = useState([]);
-
-  useEffect(() => {
-    fetch("/membros.json")
-      .then((res) => res.json())
-      .then((data) => setMembros(data));
-  }, []);
-
   return (
     <div className="bg-coolWhite flex flex-col min-h-screen">
       <Navbar />
       <HomeHero />
       <HomeProjetos project={projetoMock} side="right" />
-      <Membros
-        membros={membros}
-        categories={["All", "Comunicação", "Front", "Back", "UX/UI", "Business", "Heads"]}
-      />
+      <Membros />
+
+      {/* 🟦 Seção de Eventos */}
+      <Eventos />
+
       <Footer />
     </div>
   );
 }
-
-
