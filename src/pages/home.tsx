@@ -26,10 +26,7 @@ export default function Home() {
       <HomeHero />
       <HomeProjetos project={projetoMock} side="right" />
       <Membros />
-
-      {/* 🟦 Seção de Eventos */}
       <Eventos />
-
       <Footer />
     </div>
   );
