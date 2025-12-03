@@ -1,8 +1,23 @@
+import Navbar from "../components/navbar";
+import Footer from "../components/footer";
+import NextEventCard from "../components/nextEventCard";
+import EventHighlight from "../components/eventHighlight";
+
 export default function Events() {
   return (
-    <div className="flex w-full h-[100vh] justify-center flex-col items-center">
-      <h1 className="text-4xl font-bold">Our Events</h1>
-      <p className="text-lg">This is the events page.</p>
+    <div className="bg-coolWhite flex flex-col min-h-screen">
+      <Navbar />
+      <div className="flex flex-col justify-center items-center p-6 gap-8">
+        <EventHighlight />
+        <div className="flex flex-row gap-[400px]">
+          <div className="flex flex-col gap-4">
+            <p>primeiro parágrafo</p>
+            <p>segundo parágrafo</p>
+          </div>
+          <NextEventCard image="src/assets/eventplaceholder1.png" name="nome do evento" day={8} month="agosto" description="descrição do evento" place="local do evento" time="10h00"/>
+        </div>
+      </div>
+      <Footer />
     </div>
   );
 }
