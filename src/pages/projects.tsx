@@ -42,29 +42,7 @@ const projects = [
     frontend: "React",
     backend: "Node.js",
     color: "#0080F591",
-  },
-  {
-    id: "3",
-    title: "Project 1",
-    description:
-      "lorem ipsum dolor sit amet, consectetur adipiscing elit. lorem lorem lorem lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-    image: img1,
-    cellImage: cell1,
-    frontend: "React",
-    backend: "Node.js",
-    color: "#AE0404E5",
-  },
-  {
-    id: "4",
-    title: "Project 2",
-    description:
-      "lorem ipsum dolor sit amet, consectetur adipiscing elit. lorem lorem lorem lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-    image: img2,
-    cellImage: cell2,
-    frontend: "React",
-    backend: "Node.js",
-    color: "#0080F591",
-  },
+  }
 ];
 
 export default function Projects() {
@@ -82,6 +60,7 @@ export default function Projects() {
         <InfoComponentImages quantity={3} images={images} />
       </main>
       </div>
+      <h1>  </h1> {/* Espaçamento para descolar os componentes*/}
       {projects.map((project, index) => (
         <motion.div
           key={project.id}

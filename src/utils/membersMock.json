@@ -16,6 +16,14 @@
     "quote": "Frase exemplo"
   },
   {
+    "profileImage": "https://randomuser.me/api/portraits/men/13.jpg",
+    "name": "Rafael Oliveira",
+    "course": "Engenharia de Software",
+    "courseYear": 1,
+    "area": "PO",
+    "quote": "Frase exemplo"
+  },
+  {
     "profileImage": "https://static.vecteezy.com/system/resources/previews/020/911/740/non_2x/user-profile-icon-profile-avatar-user-icon-male-icon-face-icon-profile-icon-free-png.png",
     "name": "Rafael Oliveira",
     "course": "Engenharia de Software",
@@ -64,7 +72,7 @@
     "quote": "Frase exemplo"
   },
   {
-    "profileImage": "httpsD://randomuser.me/api/portraits/men/19.jpg",
+    "profileImage": "https://randomuser.me/api/portraits/men/19.jpg",
     "name": "Pedro Henrique",
     "course": "Ciências Econômicas",
     "courseYear": 4,
