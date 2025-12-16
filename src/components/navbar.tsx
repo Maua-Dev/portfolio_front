@@ -10,7 +10,6 @@ export default function Navbar() {
   return (
     <header className="bg-gray-800 text-white w-full shadow-md">
       <div className="h-[84px] relative w-full flex justify-center items-center px-12 bg-gray-800 text-white">
-        {/* Logo na borda esquerda */}
         <div
           className="cursor-pointer absolute left-4"
           onClick={() => goToPage("/")}
@@ -18,8 +17,7 @@ export default function Navbar() {
           <img src={logo} alt="Dev Community Logo" className="h-10 w-auto" />
         </div>
 
-        {/* Menu centralizado */}
-        <nav className="flex flex-1 justify-center gap-20 text-sm font-medium">
+        <nav className="flex flex-1 justify-center gap-20 text-base font-medium">
           <button
             onClick={() => goToPage("/")}
             className="hover:text-red-400 transition-colors"
@@ -46,7 +44,6 @@ export default function Navbar() {
           </button>
         </nav>
 
-        {/* Espaço vazio para balancear a logo */}
         <div className="w-[40px]" />
       </div>
     </header>

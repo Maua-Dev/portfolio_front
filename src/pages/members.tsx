@@ -89,7 +89,6 @@ export default function Members() {
             </div>
           </div>
           <div className="flex flex-col justify-center items-center mb-6">
-            {/* 3. Carrossel de Quotes inserido aqui */}
             <div className="w-full max-w-6xl mt-12">
               <QuoteCarousel members={membersMock} />
             </div>
