@@ -17,7 +17,7 @@ export default function Navbar() {
           <img src={logo} alt="Dev Community Logo" className="h-10 w-auto" />
         </div>
 
-        <nav className="flex flex-1 justify-center gap-20 text-base font-medium">
+        <nav className="flex flex-1 justify-center gap-20 text-lg font-medium">
           <button
             onClick={() => goToPage("/")}
             className="hover:text-red-400 transition-colors"
