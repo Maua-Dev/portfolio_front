@@ -51,16 +51,19 @@ export default function Projects() {
       <Navbar />
       <div className="p-6">
         <main className="flex-grow flex flex-row items-center justify-center gap-24">
-        <div className="flex flex-col">
+        <div className="flex flex-row">
+          <div className="flex flex-col">
           <InfoComponent
             title="Projetos"
             description="Bem-vindo à Dev Community: o espaço onde estudantes de tecnologia se conectam, aprendem e criam soluções inovadoras juntos."
           />
+          
         </div>
         <InfoComponentImages quantity={3} images={images} />
+        </div>
       </main>
       </div>
-      <h1>  </h1> {/* Espaçamento para descolar os componentes*/}
+      <h1>  </h1>
       {projects.map((project, index) => (
         <motion.div
           key={project.id}
