@@ -8,7 +8,6 @@ export default function Events() {
   return (
     <div className="bg-coolWhite flex flex-col min-h-screen">
       <Navbar />
-      <Cards />
       <div className="flex flex-col justify-center items-center p-6 gap-8">
         <EventHighlight />
         <div className="flex flex-row gap-[400px]">
@@ -27,6 +26,7 @@ export default function Events() {
           />
         </div>
       </div>
+      <Cards />
       <Footer />
     </div>
   );
