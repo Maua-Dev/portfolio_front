@@ -9,7 +9,6 @@ const CYCLES = 5;
 const MID_CYCLE = Math.floor(CYCLES / 2);
 const CENTER_OFFSET = Math.floor(VISIBLE_ITEMS / 2);
 
-
 export default function MembersCarousel({ members }: MembersCarouselProps) {
   const trackRef = useRef<HTMLDivElement>(null);
 
@@ -33,18 +32,17 @@ export default function MembersCarousel({ members }: MembersCarouselProps) {
   }, []);
 
   const updateCenterLogicalIndex = useCallback(() => {
-  const track = trackRef.current;
-  const w = getCardWidth();
-  if (!track || !w || !itemsPerCycle) return;
+    const track = trackRef.current;
+    const w = getCardWidth();
+    if (!track || !w || !itemsPerCycle) return;
 
-  const visualIndexLeft = Math.round(track.scrollLeft / w);
-  const visualIndexCenter = visualIndexLeft + CENTER_OFFSET;
-  const logical =
-    ((visualIndexCenter % itemsPerCycle) + itemsPerCycle) % itemsPerCycle;
+    const visualIndexLeft = Math.round(track.scrollLeft / w);
+    const visualIndexCenter = visualIndexLeft + CENTER_OFFSET;
+    const logical =
+      ((visualIndexCenter % itemsPerCycle) + itemsPerCycle) % itemsPerCycle;
 
-  setCenterLogicalIndex(logical);
-}, [getCardWidth, itemsPerCycle]);
-
+    setCenterLogicalIndex(logical);
+  }, [getCardWidth, itemsPerCycle]);
 
   const getScrollIndex = () => {
     const track = trackRef.current;
@@ -139,21 +137,20 @@ export default function MembersCarousel({ members }: MembersCarouselProps) {
     let d = ((a - b) % mod + mod) % mod;
     if (d > mod / 2) d -= mod;
     return d;
-    };
+  };
 
   return (
-    <div className="relative w-full">
+    <div className="relative w-screen left-1/2 -translate-x-1/2">
       <button
-        aria-label="Anterior"
         onClick={() => handleArrowClick("left")}
-        className="absolute left-2 top-1/2 -translate-y-1/2 z-10 rounded-full p-2 bg-white/80 shadow hover:bg-white focus:outline-none"
+        className="absolute left-4 top-1/2 -translate-y-1/2 z-10 rounded-full p-3 bg-white shadow"
       >
         ‹
       </button>
+
       <button
-        aria-label="Próximo"
         onClick={() => handleArrowClick("right")}
-        className="absolute right-2 top-1/2 -translate-y-1/2 z-10 rounded-full p-2 bg-white/80 shadow hover:bg-white focus:outline-none"
+        className="absolute right-4 top-1/2 -translate-y-1/2 z-10 rounded-full p-3 bg-white shadow"
       >
         ›
       </button>
@@ -161,9 +158,18 @@ export default function MembersCarousel({ members }: MembersCarouselProps) {
       <div
         ref={trackRef}
         onScroll={handleScroll}
-        className="w-full overflow-x-auto scroll-smooth snap-x snap-mandatory [scrollbar-width:none] [-ms-overflow-style:none] px-4 py-6 pb-20"
+        className="
+          w-full
+          overflow-x-auto
+          overflow-y-hidden
+          snap-x snap-mandatory
+          px-0 py-12 pb-28
+          [scrollbar-width:none]
+          [-ms-overflow-style:none]
+          [&::-webkit-scrollbar]:hidden
+        "
       >
-        <div className="flex items-end gap-2 min-w-full [&::-webkit-scrollbar]:hidden">
+        <div className="flex items-end gap-0 min-w-full">
           {displayMembers.map((member, idx) => {
             const logicalIdx =
               itemsPerCycle > 0
@@ -176,21 +182,20 @@ export default function MembersCarousel({ members }: MembersCarouselProps) {
               itemsPerCycle || 1
             );
 
-            const scales = [0.5, 0.75, 1, 0.75, 0.5];
-            let scale = 0.5;
+            const scales = [0.8, 0.95, 1.15, 0.95, 0.8];
+            let scale = 0.8;
             if (dist >= -2 && dist <= 2) scale = scales[dist + 2];
 
             return (
               <div
                 key={`${member.name}-${idx}`}
-                className="basis-1/5 shrink-0 snap-start flex justify-center items-end"
+                className="basis-1/5 shrink-0 snap-start flex justify-center items-end px-4"
               >
                 <div
-                  className={`${instantMode ? "" : "transition-transform duration-300"} will-change-transform`}
+                  className={instantMode ? "" : "transition-transform duration-300"}
                   style={{
                     transform: `scale(${scale})`,
                     transformOrigin: "bottom center",
-                    transition: instantMode ? "none" : undefined,
                   }}
                 >
                   <MemberCard
