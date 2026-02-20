@@ -6,6 +6,7 @@ import Members from "./pages/members";
 import Events from "./pages/events";
 import NotFound from "./pages/notFound";
 import HomeMobile from "./pages/homeMobile";
+import MembersMobile from "./pages/membersMobile";
 
 function App() {
   return (
@@ -17,6 +18,7 @@ function App() {
         <Route path="/events" element={<Events />} />
         <Route path="*" element={<NotFound />} />
         <Route path="/homeMobile" element={<HomeMobile />} />
+        <Route path="/membersMobile" element={<MembersMobile />} />
       </Routes>
     </BrowserRouter>
   );
