@@ -26,14 +26,14 @@ export default function FooterMobile() {
         <div className="flex flex-col sm:flex-row gap-10 md:gap-20 text-center md:text-left items-center sm:items-start">
           <div className="flex flex-col gap-2">
             <p className="font-bold text-xl mb-1">Sobre nós</p>
-            <span className="cursor-pointer hover:underline" onClick={() => goToPage("/")}>Conheça a dev</span>
-            <span className="cursor-pointer hover:underline" onClick={() => goToPage("/members")}>Membros</span>
+            <span className="cursor-pointer hover:underline" onClick={() => goToPage("/homeMobile")}>Conheça a dev</span>
+            <span className="cursor-pointer hover:underline" onClick={() => goToPage("/membersMobile")}>Membros</span>
           </div>
 
           <div className="flex flex-col gap-2">
             <p className="font-bold text-xl mb-1">Portfólio</p>
-            <span className="cursor-pointer hover:underline" onClick={() => goToPage("/projects")}>Projetos</span>
-            <span className="cursor-pointer hover:underline" onClick={() => goToPage("/events")}>Eventos</span>
+            <span className="cursor-pointer hover:underline" onClick={() => goToPage("/projectsMobile")}>Projetos</span>
+            <span className="cursor-pointer hover:underline" onClick={() => goToPage("/eventsMobile")}>Eventos</span>
           </div>
 
           <div className="flex flex-col items-center md:items-start gap-2">

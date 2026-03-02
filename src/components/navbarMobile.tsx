@@ -13,30 +13,36 @@ export default function NavbarMobile() {
         
         <div
           className="cursor-pointer flex-shrink-0"
-          onClick={() => goToPage("/")}
+          onClick={() => goToPage("/homeMobile")}
         >
           <img src={logo} alt="Dev Community Logo" className="h-8 w-auto md:h-10" />
         </div>
 
-        <nav className="flex items-center justify-end flex-1 gap-3 sm:gap-6 md:gap-10 text-sm sm:text-base font-medium">
+        <nav className="flex items-center justify-end flex-1 gap-3 sm:gap-6 md:gap-10 text-xs sm:text-base font-medium">
           <div className="flex gap-3 sm:gap-6 items-center">
             <button
-              onClick={() => goToPage("/")}
+              onClick={() => goToPage("/homeMobile")}
               className="hover:text-red-400 transition-colors whitespace-nowrap"
             >
               Home
             </button>
             <button
-              onClick={() => goToPage("/projects")}
+              onClick={() => goToPage("/projectsMobile")}
               className="hover:text-red-400 transition-colors whitespace-nowrap"
             >
               Projetos
             </button>
             <button
-              onClick={() => goToPage("/members")}
+              onClick={() => goToPage("/membersMobile")}
               className="hover:text-red-400 transition-colors whitespace-nowrap"
             >
               Membros
+            </button>
+            <button
+              onClick={() => goToPage("/eventsMobile")}
+              className="hover:text-red-400 transition-colors whitespace-nowrap"
+            >
+              Eventos
             </button>
           </div>
 
