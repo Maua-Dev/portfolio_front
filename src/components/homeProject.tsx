@@ -1,9 +1,13 @@
-import React, { useRef } from "react";
-import { motion, useScroll, useTransform, MotionValue } from "framer-motion";
+import React, { useEffect, useRef, useState } from "react";
+import {
+  motion,
+  useScroll,
+  useTransform,
+  MotionValue,
+  useSpring,
+} from "framer-motion";
 import { cn } from "../utils/cn";
-import { useNavigate } from "react-router-dom";
 
-/* Tipagem do projeto para garantir props consistentes */
 interface Project {
   id: string;
   title: string;
@@ -15,129 +19,182 @@ interface Project {
   color: string;
 }
 
-/* Props esperadas pelo componente: projeto e lado (left | right) */
 interface ProjectProps {
   project: Project;
   side: "left" | "right";
 }
 
-/* Hook utilitário para parallax vertical (retorna MotionValue transformado) */
 function useParallax(value: MotionValue<number>, distance: number) {
-  // mapeia [0,1] -> [-1.9*distance, 1.9*distance] para movimento vertical suave
-  return useTransform(value, [0, 1], [-1.9 * distance, 1.9 * distance]);
+  return useTransform(value, [0, 1], [-distance, distance]);
 }
 
-/* Hook utilitário para parallax X quando a imagem está à esquerda */
 function useParallaxXLeft(value: MotionValue<number>, distance: number) {
-  // mapeia [0,1] -> [0, 1.9*distance] para deslocamento horizontal crescente
-  return useTransform(value, [0, 1], [0, 1.9 * distance]);
+  return useTransform(value, [0, 1], [0, distance]);
 }
 
-/* Hook utilitário para parallax X quando a imagem está à direita */
 function useParallaxXRight(value: MotionValue<number>, distance: number) {
-  // mapeia [1,0] -> [-1.9*distance, 0] para deslocamento horizontal invertido
-  return useTransform(value, [1, 0], [-1.9 * distance, 0]);
+  return useTransform(value, [1, 0], [-distance, 0]);
 }
 
-/* Componente principal que apresenta um projeto com efeito parallax */
 export default function HomeProjetos({ project, side }: ProjectProps) {
-  // referência ao container para observar progresso de scroll relativo
-  const ref = useRef(null);
-  // useScroll do framer-motion fornece scrollYProgress relativo ao target
-  const { scrollYProgress } = useScroll({ target: ref });
+  const ref = useRef<HTMLDivElement | null>(null);
+  const [isMobile, setIsMobile] = useState(false);
 
-  /* opacity: fade-out quando o scrollYProgress estiver entre 0.8 e 1 */
-  const opacity = useTransform(scrollYProgress, [0.8, 1], [1, 0]);
+  useEffect(() => {
+    const media = window.matchMedia("(max-width: 767px)");
+    const apply = () => setIsMobile(media.matches);
+    apply();
+    media.addEventListener("change", apply);
+    return () => media.removeEventListener("change", apply);
+  }, []);
 
-  // hook do react-router para navegar ao clicar em botão
-  const navigate = useNavigate();
+  const { scrollYProgress } = useScroll({
+    target: ref,
+    offset: ["start end", "end start"],
+  });
+  const smoothProgress = useSpring(scrollYProgress, {
+    stiffness: 110,
+    damping: 24,
+    mass: 0.75,
+  });
 
-  /* Handler que navega para a rota de projetos */
-  function handleMoreProjects() {
-    navigate("/projects");
-  }
+  const xDistanceCell = isMobile ? 16 : 44;
+  const xDistanceLogo = isMobile ? 10 : 26;
+  const yDistanceBg = isMobile ? 36 : 70;
+
+  const contentOpacity = useTransform(smoothProgress, [0.05, 0.28, 0.95], [0, 1, 1]);
+  const textOpacity = useTransform(smoothProgress, [0.08, 0.32, 0.95], [0, 1, 1]);
+  const cellRevealY = useTransform(
+    smoothProgress,
+    [0, 0.35, 1],
+    [isMobile ? 40 : 55, 0, isMobile ? -12 : -20],
+  );
+  const logoRevealY = useTransform(
+    smoothProgress,
+    [0, 0.35, 1],
+    [isMobile ? 18 : 26, 0, isMobile ? -8 : -14],
+  );
+  const cellScale = useTransform(smoothProgress, [0, 0.35, 1], [0.92, 1, 1.02]);
+  const logoScale = useTransform(smoothProgress, [0, 0.35, 1], [0.95, 1, 1.01]);
+  const xCell =
+    side === "right"
+      ? useParallaxXLeft(smoothProgress, xDistanceCell)
+      : useParallaxXRight(smoothProgress, xDistanceCell);
+  const xLogo =
+    side === "right"
+      ? useParallaxXRight(smoothProgress, xDistanceLogo)
+      : useParallaxXLeft(smoothProgress, xDistanceLogo);
+  const yBg = useParallax(smoothProgress, yDistanceBg);
 
   return (
-    <div className="w-full px-8">
-      {/* Título da seção de projetos */}
-      <h1 className="text-6xl font-bold text-center mb-8" style={{ color: "#464646" }}>
-        Projetos
-      </h1>
+    <section className="w-full bg-coolWhite">
+      <div className="w-full py-10 sm:py-14">
+        <h1
+          className="text-3xl sm:text-4xl md:text-6xl font-bold text-center mb-6 sm:mb-8 px-4 sm:px-6 md:px-8"
+          style={{ color: "#464646" }}
+        >
+          Projetos
+        </h1>
 
-      {/* Container motion que usa ref para calcular parallax com base no scroll */}
-      <motion.div
-        className={cn(
-          "relative w-full h-[80vh] flex items-center justify-center mt-4",
-          {
-            // inverte a ordem visual quando side === "right"
-            "flex-row-reverse": side === "right",
-          },
-        )}
-        ref={ref}
-      >
-        {/* Coluna da esquerda/direita que contém a imagem do "cell" */}
-        <div className="flex w-1/2 z-10 h-full flex-col">
-          <motion.img
-            src={project.cellImage}
-            alt=""
-            style={{
-              // aplica fade com base em opacity e deslocamento X via parallax
-              opacity: opacity,
-              x:
-                side === "right"
-                  ? useParallaxXLeft(scrollYProgress, 40) // quando a imagem está à direita, usar parallax left
-                  : useParallaxXRight(scrollYProgress, 40), // caso contrário, parallax right
-            }}
-            className="h-full w-auto"
-          />
-        </div>
-
-        {/* Coluna com conteúdo textual e imagem principal do projeto */}
-        <div className="flex w-1/2 h-full flex-col gap-4 items-center z-10 font-poppins text-coolWhite">
-          <motion.img
-            src={project.image}
-            alt=""
-            style={{
-              // imagem principal também participa do parallax horizontal + fade
-              opacity: opacity,
-              x:
-                side === "right"
-                  ? useParallaxXRight(scrollYProgress, 50)
-                  : useParallaxXLeft(scrollYProgress, 50),
-            }}
-            className="h-2/6 w-auto mb-1/6"
-          />
-          {/* Conteúdo textual com informações do projeto */}
-          <div className="flex flex-col items-start mt-10 w-1/2">
-            <h1 className="text-5xl font-bold">Tecnologias</h1>
-            <p className="text-xl mt-2">Frontend: {project.frontend}</p>
-            <p className="text-xl mt-2">Backend: {project.backend}</p>
-            <p className="text-sm mt-8 text-justify">{project.description}</p>
-
-            {/* Botão que navega para a página de projetos */}
-            <button
-              onClick={handleMoreProjects}
-              className="mt-8 mx-auto rounded-full px-4 py-2 bg-transparent border-2 border-coolWhite hover:bg-coolWhite hover:text-black transition-colors duration-300"
-            >
-              MAIS PROJETOS
-            </button>
-          </div>
-        </div>
-
-        {/* Painel de fundo que recebe cor do projeto e movimento parallax vertical */}
         <motion.div
+          ref={ref}
           className={cn(
-            `absolute h-[90%] w-10/11 bottom-0 z-0 duration-75`,
-            side === "left" ? "left-0 rounded-r-xl" : "right-0 rounded-l-xl",
+            "relative w-full overflow-hidden",
+            // Mobile: altura automática (não trava em 80vh)
+            "min-h-[540px] md:min-h-[74vh]",
+            // Mobile: coluna | Desktop: duas colunas
+            "flex flex-col md:flex-row items-center justify-center",
+            // espaçamento
+            "gap-6 md:gap-0",
+            {
+              // No desktop, mantém a inversão quando side === "right"
+              "md:flex-row-reverse": side === "right",
+            },
           )}
-          style={{
-            // y usa useParallax para subir/descer suavemente com o scroll
-            y: useParallax(scrollYProgress, 200),
-            backgroundColor: project.color, // cor de destaque do projeto
-          }}
-        />
-      </motion.div>
-    </div>
+        >
+          {/* Coluna "cell" */}
+          <div className="flex w-full md:w-1/2 z-10 md:h-full flex-col items-center justify-center overflow-hidden">
+            <motion.img
+              src={project.cellImage}
+              alt=""
+              style={{ opacity: contentOpacity, x: xCell, y: cellRevealY, scale: cellScale }}
+              className={cn(
+                // Mobile: limita altura pra não estourar
+                "h-[38vh] sm:h-[44vh] md:h-[74%] w-auto",
+                // garante que não vaze
+                "max-w-full drop-shadow-[0_18px_34px_rgba(0,0,0,0.35)]",
+              )}
+            />
+          </div>
+
+          {/* Coluna conteúdo */}
+          <div className="flex w-full md:w-1/2 z-10 md:h-full flex-col gap-3 items-start font-poppins text-[#3f4650] overflow-visible px-4 sm:px-6 md:px-0">
+            <motion.img
+              src={project.image}
+              alt=""
+              style={{ opacity: contentOpacity, x: xLogo, y: logoRevealY, scale: logoScale }}
+              className={cn(
+                "w-auto max-w-full",
+                // Logo menor para equilibrar com o mockup do celular
+                "h-14 sm:h-16 md:h-[24%]",
+                // espaçamento
+                "mt-1 md:mt-2",
+              )}
+            />
+
+            <motion.div
+              style={{ opacity: textOpacity, y: logoRevealY }}
+              className={cn(
+                "flex flex-col",
+                // Mobile: centraliza e usa largura maior
+                "w-full max-w-md px-2 sm:px-0",
+                // Desktop: mantém sua largura mais estreita
+                "md:w-[62%] md:max-w-none",
+                // alinhamento do texto
+                "text-left",
+                // no desktop você tinha mt-10; no mobile isso vira menor
+                "mt-3 sm:mt-4 md:mt-6",
+              )}
+            >
+              <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold">
+                Tecnologias
+              </h2>
+
+              <p className="text-base sm:text-lg md:text-xl mt-3">
+                Frontend: {project.frontend}
+              </p>
+              <p className="text-base sm:text-lg md:text-xl mt-2">
+                Backend: {project.backend}
+              </p>
+
+              <p className="text-sm sm:text-base mt-5 md:mt-6 text-left leading-relaxed">
+                {project.description}
+              </p>
+
+            </motion.div>
+          </div>
+
+          {/* Painel de fundo */}
+          <motion.div
+            className={cn(
+              "absolute bottom-0 z-0",
+              // altura do painel
+              "h-[60%] md:h-[50%]",
+              // largura correta (w-10/11 não é padrão)
+              "w-[94%] md:w-[95%]",
+              // arredondamento e posição
+              side === "left"
+                ? "left-0 rounded-r-xl md:rounded-r-2xl"
+                : "right-0 rounded-l-xl md:rounded-l-2xl",
+            )}
+            style={{
+              y: yBg,
+              backgroundColor: project.color,
+              boxShadow: "0 24px 45px rgba(0, 0, 0, 0.22)",
+            }}
+          />
+        </motion.div>
+      </div>
+    </section>
   );
 }
-

@@ -23,6 +23,7 @@ export default function Members() {
 
   const carouselRef = useRef<HTMLDivElement | null>(null);
   const cardRef = useRef<HTMLDivElement | null>(null);
+  const trackRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     setMembers(membersMock as Member[]);
@@ -35,14 +36,17 @@ export default function Members() {
       ? members
       : members.filter((m) => m.area === areaFilter);
 
+  // Mede o "passo" real: largura do card + gap do track (gap-6)
   const getCardStep = () => {
     const card = cardRef.current;
+    const track = trackRef.current;
     if (!card) return 0;
 
-    // Você usa gap-6 no container (Tailwind). marginRight pode não refletir o gap.
-    // Ainda assim vou manter sua lógica, mas se precisar ficar perfeito eu te mostro como medir o gap real.
-    const style = window.getComputedStyle(card);
-    const gap = parseInt(style.marginRight || "0", 10);
+    let gap = 0;
+    if (track) {
+      const style = window.getComputedStyle(track);
+      gap = parseInt(style.columnGap || style.gap || "0", 10);
+    }
 
     return card.offsetWidth + gap;
   };
@@ -58,13 +62,8 @@ export default function Members() {
     });
   };
 
-  const handlePrev = () => {
-    scrollToCard(Math.max(0, currentPage - 1));
-  };
-
-  const handleNext = () => {
-    scrollToCard(Math.min(pagesCount - 1, currentPage + 1));
-  };
+  const handlePrev = () => scrollToCard(Math.max(0, currentPage - 1));
+  const handleNext = () => scrollToCard(Math.min(pagesCount - 1, currentPage + 1));
 
   useEffect(() => {
     const container = carouselRef.current;
@@ -78,6 +77,7 @@ export default function Members() {
         return;
       }
 
+      // quantidade de "páginas" pelo passo (1 card por passo)
       const count = Math.max(1, Math.ceil(container.scrollWidth / step));
       setPagesCount(count);
       setCurrentPage((prev) => Math.min(prev, count - 1));
@@ -92,7 +92,7 @@ export default function Members() {
     };
 
     updatePagination();
-    container.addEventListener("scroll", handleScroll);
+    container.addEventListener("scroll", handleScroll, { passive: true });
     window.addEventListener("resize", updatePagination);
 
     return () => {
@@ -114,7 +114,6 @@ export default function Members() {
         e.preventDefault();
         handlePrev();
       }
-
       if (e.key === "ArrowRight") {
         e.preventDefault();
         handleNext();
@@ -122,16 +121,11 @@ export default function Members() {
     };
 
     window.addEventListener("keydown", handleKeyDown);
-
-    return () => {
-      window.removeEventListener("keydown", handleKeyDown);
-    };
+    return () => window.removeEventListener("keydown", handleKeyDown);
   }, [currentPage, pagesCount]);
 
   const getVisibleDots = () => {
-    if (pagesCount <= MAX_VISIBLE_DOTS) {
-      return { start: 0, end: pagesCount };
-    }
+    if (pagesCount <= MAX_VISIBLE_DOTS) return { start: 0, end: pagesCount };
 
     const half = Math.floor(MAX_VISIBLE_DOTS / 2);
     let start = currentPage - half;
@@ -151,11 +145,9 @@ export default function Members() {
   };
 
   const { start, end } = getVisibleDots();
-
   const canGoPrev = currentPage > 0;
   const canGoNext = currentPage < pagesCount - 1;
 
-  // Quando filtra, faz sentido voltar pro começo e “alinha” o carrossel
   useEffect(() => {
     setCurrentPage(0);
     scrollToCard(0);
@@ -163,146 +155,156 @@ export default function Members() {
   }, [areaFilter]);
 
   return (
-    <section className="py-12 bg-gray-50">
-      <h2 className="text-3xl font-bold text-center mb-8">Membros</h2>
+    <section className="bg-gray-50">
+      <div className="mx-auto w-full max-w-6xl px-4 sm:px-6 lg:px-8 py-12">
+        <h2 className="text-2xl sm:text-3xl font-bold text-center mb-8">
+          Membros
+        </h2>
 
-      <div className="flex justify-center flex-wrap gap-8 mb-10 px-4">
-        {areas.map((area) => (
-          <button
-            key={area}
-            onClick={() => setAreaFilter(area)}
-            className={`pb-2 text-base font-bold transition-colors bg-transparent rounded-none
-              ${
-                areaFilter === area
-                  ? "text-gray-800 border-b-2 border-purple-700"
-                  : "text-gray-600 border-b-2 border-transparent hover:text-gray-800"
-              }`}
-          >
-            {area}
-          </button>
-        ))}
-      </div>
-
-      <div className="relative w-full px-4">
-        {/* Botão ESQUERDA */}
-        <button
-          type="button"
-          onClick={handlePrev}
-          disabled={!canGoPrev}
-          aria-label="Anterior"
-          className={`absolute left-2 top-1/2 -translate-y-1/2 z-10
-            h-10 w-10 rounded-full shadow-md border bg-white
-            flex items-center justify-center
-            transition-opacity
-            ${canGoPrev ? "opacity-100 hover:opacity-90" : "opacity-40 cursor-not-allowed"}
-          `}
-        >
-          ‹
-        </button>
-
-        {/* Botão DIREITA */}
-        <button
-          type="button"
-          onClick={handleNext}
-          disabled={!canGoNext}
-          aria-label="Próximo"
-          className={`absolute right-2 top-1/2 -translate-y-1/2 z-10
-            h-10 w-10 rounded-full shadow-md border bg-white
-            flex items-center justify-center
-            transition-opacity
-            ${canGoNext ? "opacity-100 hover:opacity-90" : "opacity-40 cursor-not-allowed"}
-          `}
-        >
-          ›
-        </button>
-
-        <div
-          className="w-full overflow-x-auto scrollbar-hide focus:outline-none"
-          ref={carouselRef}
-          tabIndex={0}
-        >
-          <div className="flex gap-6 flex-nowrap scroll-smooth snap-x snap-mandatory">
-            {filteredMembers.map((m, i) => (
-              <div
-                key={m.email ?? m.name ?? i}
-                ref={i === 0 ? cardRef : null}
-                className="bg-white rounded-2xl shadow-md p-8 flex-shrink-0 snap-start flex flex-col items-center text-center
-                min-w-[260px] sm:min-w-[300px] md:min-w-[340px] lg:min-w-[380px] min-h-[300px]"
-              >
-                <img
-                  src={m.profileImage}
-                  alt={m.name}
-                  className="w-24 h-24 rounded-full object-cover mb-6"
-                />
-
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                  {m.name}
-                </h3>
-
-                {m.phone && (
-                  <p className="text-base text-gray-700 mb-1">{m.phone}</p>
-                )}
-
-                {m.email && (
-                  <a
-                    href={`mailto:${m.email}`}
-                    className="text-base text-purple-700 underline mb-1"
-                  >
-                    {m.email}
-                  </a>
-                )}
-              </div>
-            ))}
-          </div>
+        {/* Filtros */}
+        <div className="flex justify-center flex-wrap gap-x-6 gap-y-4 mb-10">
+          {areas.map((area) => (
+            <button
+              key={area}
+              onClick={() => setAreaFilter(area)}
+              className={`pb-2 text-sm sm:text-base font-bold transition-colors bg-transparent rounded-none
+                ${
+                  areaFilter === area
+                    ? "text-gray-800 border-b-2 border-purple-700"
+                    : "text-gray-600 border-b-2 border-transparent hover:text-gray-800"
+                }`}
+            >
+              {area}
+            </button>
+          ))}
         </div>
 
-        {/* Bolinhas */}
-        {pagesCount > 1 && (
-          <div className="mt-6 flex items-center justify-center gap-2">
-            {/* reticências à esquerda */}
-            {start > 0 && (
-              <>
-                <button
-                  type="button"
-                  onClick={() => scrollToCard(0)}
-                  className="h-2 w-2 rounded-full bg-gray-300 hover:opacity-80"
-                  aria-label="Ir para o início"
-                />
-                <span className="text-gray-400 select-none px-1">…</span>
-              </>
-            )}
+        <div className="relative w-full">
+          {/* Setas: escondidas no mobile (pra não atrapalhar swipe/toque) */}
+          <button
+            type="button"
+            onClick={handlePrev}
+            disabled={!canGoPrev}
+            aria-label="Anterior"
+            className={`hidden md:flex absolute left-2 top-1/2 -translate-y-1/2 z-10
+              h-10 w-10 rounded-full shadow-md border bg-white
+              items-center justify-center transition-opacity
+              ${canGoPrev ? "opacity-100 hover:opacity-90" : "opacity-40 cursor-not-allowed"}
+            `}
+          >
+            ‹
+          </button>
 
-            {Array.from({ length: end - start }, (_, idx) => {
-              const page = start + idx;
-              const isActive = page === currentPage;
+          <button
+            type="button"
+            onClick={handleNext}
+            disabled={!canGoNext}
+            aria-label="Próximo"
+            className={`hidden md:flex absolute right-2 top-1/2 -translate-y-1/2 z-10
+              h-10 w-10 rounded-full shadow-md border bg-white
+              items-center justify-center transition-opacity
+              ${canGoNext ? "opacity-100 hover:opacity-90" : "opacity-40 cursor-not-allowed"}
+            `}
+          >
+            ›
+          </button>
 
-              return (
-                <button
-                  key={page}
-                  type="button"
-                  onClick={() => scrollToCard(page)}
-                  aria-label={`Ir para página ${page + 1}`}
-                  className={`h-2.5 w-2.5 rounded-full transition-all
-                    ${isActive ? "bg-purple-700 scale-110" : "bg-gray-300 hover:opacity-80"}
-                  `}
-                />
-              );
-            })}
+          {/* Carrossel */}
+          <div
+            className="w-full overflow-x-auto scrollbar-hide focus:outline-none"
+            ref={carouselRef}
+            tabIndex={0}
+          >
+            <div
+              ref={trackRef}
+              className="flex gap-6 flex-nowrap scroll-smooth snap-x snap-mandatory py-2"
+            >
+              {filteredMembers.map((m, i) => (
+                <div
+                  key={m.email ?? m.name ?? i}
+                  ref={i === 0 ? cardRef : null}
+                  className="bg-white rounded-2xl shadow-md p-6 sm:p-8 flex-shrink-0 snap-start flex flex-col items-center text-center
+                  min-w-[240px] sm:min-w-[300px] md:min-w-[340px] lg:min-w-[380px] min-h-[300px]"
+                >
+                  <img
+                    src={m.profileImage}
+                    alt={m.name}
+                    className="w-20 h-20 sm:w-24 sm:h-24 rounded-full object-cover mb-5 sm:mb-6"
+                  />
 
-            {/* reticências à direita */}
-            {end < pagesCount && (
-              <>
-                <span className="text-gray-400 select-none px-1">…</span>
-                <button
-                  type="button"
-                  onClick={() => scrollToCard(pagesCount - 1)}
-                  className="h-2 w-2 rounded-full bg-gray-300 hover:opacity-80"
-                  aria-label="Ir para o fim"
-                />
-              </>
-            )}
+                  <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-2">
+                    {m.name}
+                  </h3>
+
+                  {m.phone && (
+                    <p className="text-sm sm:text-base text-gray-700 mb-1">
+                      {m.phone}
+                    </p>
+                  )}
+
+                  {m.email && (
+                    <a
+                      href={`mailto:${m.email}`}
+                      className="text-sm sm:text-base text-purple-700 underline mb-1 break-all"
+                    >
+                      {m.email}
+                    </a>
+                  )}
+                </div>
+              ))}
+            </div>
           </div>
-        )}
+
+          {/* Bolinhas */}
+          {pagesCount > 1 && (
+            <div className="mt-6 flex items-center justify-center gap-2">
+              {start > 0 && (
+                <>
+                  <button
+                    type="button"
+                    onClick={() => scrollToCard(0)}
+                    className="h-2 w-2 rounded-full bg-gray-300 hover:opacity-80"
+                    aria-label="Ir para o início"
+                  />
+                  <span className="text-gray-400 select-none px-1">…</span>
+                </>
+              )}
+
+              {Array.from({ length: end - start }, (_, idx) => {
+                const page = start + idx;
+                const isActive = page === currentPage;
+
+                return (
+                  <button
+                    key={page}
+                    type="button"
+                    onClick={() => scrollToCard(page)}
+                    aria-label={`Ir para página ${page + 1}`}
+                    className={`h-2.5 w-2.5 rounded-full transition-all
+                      ${
+                        isActive
+                          ? "bg-purple-700 scale-110"
+                          : "bg-gray-300 hover:opacity-80"
+                      }
+                    `}
+                  />
+                );
+              })}
+
+              {end < pagesCount && (
+                <>
+                  <span className="text-gray-400 select-none px-1">…</span>
+                  <button
+                    type="button"
+                    onClick={() => scrollToCard(pagesCount - 1)}
+                    className="h-2 w-2 rounded-full bg-gray-300 hover:opacity-80"
+                    aria-label="Ir para o fim"
+                  />
+                </>
+              )}
+            </div>
+          )}
+        </div>
       </div>
     </section>
   );

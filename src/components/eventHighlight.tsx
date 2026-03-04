@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+﻿import { useState, useEffect } from 'react';
 
 import imagem1 from '../assets/eventhighlightplaceholder.png';
 import imagem2 from '../assets/eventhighlightplaceholder2.png';

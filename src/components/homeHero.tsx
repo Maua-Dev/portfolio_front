@@ -2,32 +2,25 @@ import React from "react";
 
 /**
  * HomeHero
- * Componente funcional que renderiza a seção hero da página inicial.
- * - Sem props; conteúdo estático.
- * - Usa utilitários do Tailwind CSS para layout responsivo e espaçamento.
+ * Seção hero da página inicial (responsiva).
  */
 const HomeHero: React.FC = () => {
   return (
-    // Seção principal: container flex com espaçamento, padding e quebra em wrap
-    <section className="flex justify-between items-center bg-gray-100 px-20 py-32 gap-x-16 flex-wrap">
-      {/* Coluna de texto com largura máxima para controlar quebra de linha */}
-      <div className="max-w-xl">
-        {/* Título principal:
-            - text-5xl: tamanho grande do título
-            - leading-tight: reduz espaçamento entre linhas
-            - font-bold: negrito
-            - text-[#2b2b2b]: cor personalizada
-            - Fragmentos em span para ênfase com cor/fonte diferente
-        */}
-        <h1 className="text-5xl leading-tight font-bold text-[#2b2b2b]">
-          Soluções ágeis <br />
-          criadas por{" "}
-          <span className="text-[#4b0000] font-extrabold">quem vive</span>{" "}
-          <br />
-          tecnologia.
-        </h1>
+    <section className="bg-gray-100">
+      <div className="mx-auto w-full max-w-6xl px-4 sm:px-6 lg:px-8 py-14 sm:py-20 md:py-28 flex items-center justify-between gap-8 md:gap-16 flex-col md:flex-row">
+        <div className="max-w-xl text-center md:text-left">
+          <h1 className="text-3xl sm:text-4xl md:text-5xl leading-tight font-bold text-[#2b2b2b]">
+            Soluções ágeis <br />
+            criadas por{" "}
+            <span className="text-[#4b0000] font-extrabold">quem vive</span>{" "}
+            <br />
+            tecnologia.
+          </h1>
+        </div>
+
+        {/* Espaço para imagem/CTA no futuro */}
+        {/* <div className="w-full md:w-[420px]">...</div> */}
       </div>
-      {/* Aqui poderia entrar uma imagem ou CTA no futuro (atualmente só texto) */}
     </section>
   );
 };

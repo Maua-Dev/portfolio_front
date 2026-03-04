@@ -21,12 +21,16 @@ const projetoMock = {
 
 export default function Home() {
   return (
-    <div className="bg-coolWhite flex flex-col min-h-screen">
+    <div className="min-h-screen bg-coolWhite flex flex-col overflow-x-hidden">
       <Navbar />
-      <HomeHero />
-      <HomeProjetos project={projetoMock} side="right" />
-      <Membros />
-      <Eventos />
+
+      <main className="flex-1">
+        <HomeHero />
+        <HomeProjetos project={projetoMock} side="right" />
+        <Membros />
+        <Eventos />
+      </main>
+
       <Footer />
     </div>
   );

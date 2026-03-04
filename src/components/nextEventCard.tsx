@@ -1,4 +1,4 @@
-type NextEventCardProps = {
+﻿type NextEventCardProps = {
   image: string;
   name: string;
   day: number;

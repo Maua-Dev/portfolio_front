@@ -1,11 +1,19 @@
-export default function InfoComponentTags() {
-    return (
-        <div className="flex flex-row gap-4 font-bold items-center">
-            <p>5 projetos</p>
-            <img className="h-[40px] w-[2px]" src="src/assets/separator.png"/>
-            <p>Palestras</p>
-            <img className="h-[40px] w-[2px]" src="src/assets/separator.png"/>
-            <p>+2000 usuários</p>
-        </div>
-    );
+﻿export default function InfoComponentTags() {
+  return (
+    <div className="min-w-max flex flex-row gap-3 sm:gap-4 font-bold items-center text-xs sm:text-sm md:text-base text-gray-600">
+      <p className="whitespace-nowrap">5 projetos</p>
+      <img
+        className="h-5 sm:h-7 md:h-10 w-px object-cover"
+        src="src/assets/separator.png"
+        alt="separador"
+      />
+      <p className="whitespace-nowrap">Palestras</p>
+      <img
+        className="h-5 sm:h-7 md:h-10 w-px object-cover"
+        src="src/assets/separator.png"
+        alt="separador"
+      />
+      <p className="whitespace-nowrap">+2000 usuarios</p>
+    </div>
+  );
 }
