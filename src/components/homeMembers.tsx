@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { WheelEvent, useEffect, useRef, useState } from "react";
 import membersMock from "../utils/membersMock.json";
 import "../assets/scrollbar.css";
 
@@ -64,6 +64,16 @@ export default function Members() {
 
   const handlePrev = () => scrollToCard(Math.max(0, currentPage - 1));
   const handleNext = () => scrollToCard(Math.min(pagesCount - 1, currentPage + 1));
+  const handleWheel = (e: WheelEvent<HTMLDivElement>) => {
+    const container = carouselRef.current;
+    if (!container) return;
+
+    e.preventDefault();
+    e.stopPropagation();
+
+    const delta = Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.deltaY;
+    container.scrollLeft += delta;
+  };
 
   useEffect(() => {
     const container = carouselRef.current;
@@ -156,13 +166,13 @@ export default function Members() {
 
   return (
     <section className="bg-gray-50">
-      <div className="mx-auto w-full max-w-6xl px-4 sm:px-6 lg:px-8 py-12">
-        <h2 className="text-2xl sm:text-3xl font-bold text-center mb-8">
+      <div className="w-full py-12">
+        <h2 className="text-2xl sm:text-3xl font-bold text-center mb-8 px-4 sm:px-6 lg:px-8">
           Membros
         </h2>
 
         {/* Filtros */}
-        <div className="flex justify-center flex-wrap gap-x-6 gap-y-4 mb-10">
+        <div className="flex justify-center flex-wrap gap-x-6 gap-y-4 mb-10 px-4 sm:px-6 lg:px-8">
           {areas.map((area) => (
             <button
               key={area}
@@ -211,9 +221,11 @@ export default function Members() {
 
           {/* Carrossel */}
           <div
-            className="w-full overflow-x-auto scrollbar-hide focus:outline-none"
+            className="w-full overflow-x-auto overflow-y-hidden scrollbar-hide focus:outline-none"
             ref={carouselRef}
             tabIndex={0}
+            onWheelCapture={handleWheel}
+            onWheel={handleWheel}
           >
             <div
               ref={trackRef}
