@@ -13,8 +13,8 @@ export default function EventsMobile() {
         <EventHighlightMobile />
         <div className="flex flex-col md:flex-row gap-8 w-full">
           <div className="flex flex-col gap-4 md:w-1/2">
-            <p>primeiro parágrafo</p>
-            <p>segundo parágrafo</p>
+            <p>A Dev Community Mauá promove eventos ao longo do ano com o objetivo de proporcionar experiências práticas, aprendizado contínuo e conexão entre estudantes e entusiastas da tecnologia. Nossas iniciativas buscam desenvolver tanto habilidades técnicas quanto criativas, sempre alinhadas às demandas do mercado e à troca de conhecimento entre a comunidade. Além de palestras e encontros sobre temas relevantes, realizamos eventos próprios que incentivam a prática e a inovação. Entre eles, destacam-se o Battle Snake, o Dev In The Dark e o Design It Yourself, que já se consolidaram como tradições da entidade.</p>
+            <p></p>
           </div>
           <div className="w-full md:w-1/2">
             <NextEventCardMobile

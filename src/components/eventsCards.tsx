@@ -98,8 +98,8 @@ const Cards: React.FC = () => {
             <div className="p-4">
               <p className="text-gray-600 text-sm mb-4">{evento.descricao}</p>
               <div className="flex flex-col">
-                <p className="font-semibold text-gray-700">Professores</p>
-                <p className="text-gray-500 text-sm">Lorem Ipsum</p>
+                <p className="font-semibold text-gray-700">Palestrantes</p>
+                <p className="text-gray-500 text-sm">Dev Community Mauá</p>
               </div>
             </div>
           </div>
