@@ -6,8 +6,11 @@ import imgBusiness from "../assets/business.png";
 // import imgEstrategia from "../assets/strategie.png";
 // import imgLideranca from "../assets/leadership.png";
 import devinthedark from "../assets/devinthedark.jpg";
-import designityourself from "../assets/designityourself.jpg"
-import battlesnake from "../assets/battlesnake.jpg"
+import designityourself from "../assets/designityourself.jpg";
+import battlesnake from "../assets/battlesnake.jpg";
+import deleteEvent from "../assets/deleteEvents.png";
+import editEvent from "../assets/editEvents.png";
+import { useAuth } from "../hooks/useAuth";
 
 interface Evento {
   titulo: string;
@@ -55,24 +58,26 @@ const eventos: Evento[] = [
   {
     titulo: "BattleSnake",
     imagem: battlesnake,
-    descricao: 
+    descricao:
       "No campeonato BattleSnake, você não joga, você PROGRAMA a estratégia da sua cobra para lutar pela sobrevivência contra outras IAs no tabuleiro. É uma competição de lógica, criatividade e habilidade de back-end.",
   },
   {
     titulo: "Dev in the Dark",
     imagem: devinthedark,
-    descricao: 
+    descricao:
       "Os participantes receberão uma captura de tela de uma interface e deverão reproduzir essa tela usando HTML e CSS, sem visualizar o resultado do código enquanto programam. A visualização será liberada apenas após a finalização do tempo, revelando o quão perto (ou longe) você chegou do layout original.",
   },
   {
     titulo: "Design it Yourself",
     imagem: designityourself,
-    descricao: 
+    descricao:
       "Os participantes, em grupo, irão desenvolver uma interface do zero baseado em um briefing proposto para cada grupo. Vocês irão passar por todas as etapas que integram o desenvolvimento de um design, sempre levando em conta a experiência do usuário e a área de interação.",
   },
 ];
 
 const Cards: React.FC = () => {
+  const { isLoggedIn } = useAuth();
+
   return (
     <section className="bg-coolWhite py-16 px-6 md:px-12">
       <h2 className="text-4xl font-bold text-left text-gray-800 mb-12 max-w-6xl mx-auto">
@@ -99,7 +104,17 @@ const Cards: React.FC = () => {
               <p className="text-gray-600 text-sm mb-4">{evento.descricao}</p>
               <div className="flex flex-col">
                 <p className="font-semibold text-gray-700">Palestrantes</p>
-                <p className="text-gray-500 text-sm">Dev Community Mauá</p>
+                <p className="text-gray-500 text-sm mb-4">Dev Community Mauá</p>
+                {isLoggedIn && (
+                  <div className="flex flex-row gap-2">
+                    <button className="hover:brightness-75 transition-all duration-200">
+                      <img src={deleteEvent} alt="Deletar" className="w-6 h-6" />
+                    </button>
+                    <button className="hover:brightness-75 transition-all duration-200">
+                      <img src={editEvent} alt="Editar" className="w-6 h-6" />
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
           </div>
