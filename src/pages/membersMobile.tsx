@@ -1,8 +1,8 @@
 import { useMemo, useState } from "react";
-import Footer from "../components/footer";
+import FooterMobile from "../components/footerMobile";
 import InfoComponent from "../components/infoComponent";
-import Navbar from "../components/navbar";
-import InfoComponentImages from "../components/infoComponentElements/infoComponentImages";
+import NavbarMobile from "../components/navbarMobile";
+import InfoComponentImagesMobile from "../components/infoComponentElements/infoComponentImagesMobile";
 import MembersCarousel from "../components/memberCarousel";
 import QuoteCarousel from "../components/quoteCarousel";
 
@@ -32,7 +32,7 @@ const FILTERS: { label: string; value: Filter }[] = [
   { label: "Business", value: "BUSINESS" },
 ];
 
-export default function Members() {
+export default function MembersMobile() {
   const [filter, setFilter] = useState<Filter>("ALL");
 
   const filteredMembers = useMemo(() => {
@@ -42,7 +42,7 @@ export default function Members() {
 
   return (
     <div className="bg-coolWhite flex flex-col min-h-screen">
-      <Navbar />
+      <NavbarMobile />
       <div className="p-6">
         <main>
           <div className="flex-grow flex flex-row items-center justify-center gap-24 mb-24">
@@ -52,7 +52,7 @@ export default function Members() {
                 description="Conheça os membros da Dev Community! Eles fazem tudo acontecer, colaborando e inovando juntos."
               />
             </div>
-            <InfoComponentImages quantity={2} images={images} />
+            <InfoComponentImagesMobile quantity={2} images={images} />
           </div>
           <div className="flex flex-col justify-center items-center gap-6">
             <div
@@ -93,7 +93,7 @@ export default function Members() {
           </div>
         </main>
       </div>
-      <Footer />
+      <FooterMobile />
     </div>
   );
 }

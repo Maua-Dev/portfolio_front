@@ -1,6 +1,6 @@
-import Footer from "../components/footer";
+import FooterMobile from "../components/footerMobile";
 import HomeHero from "../components/homeHero";
-import Navbar from "../components/navbar";
+import NavbarMobile from "../components/navbarMobile";
 import HomeProjetos from "../components/homeProject";
 import Membros from "../components/homeMembers";
 import cell2 from "../assets/cellImage2.png";
@@ -19,15 +19,15 @@ const projetoMock = {
   color: "#0080F591",
 };
 
-export default function Home() {
+export default function HomeMobile() {
   return (
     <div className="bg-coolWhite flex flex-col min-h-screen">
-      <Navbar />
+      <NavbarMobile />
       <HomeHero />
       <HomeProjetos project={projetoMock} side="right" />
       <Membros />
       <Eventos />
-      <Footer />
+      <FooterMobile />
     </div>
   );
 }
