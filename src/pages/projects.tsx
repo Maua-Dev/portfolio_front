@@ -1,7 +1,7 @@
 import Project from "../components/project";
-import cell1 from "../assets/cellImage1.png";
+import cell1 from "../assets/newCellImage1.png";
 import img1 from "../assets/image1.png";
-import cell2 from "../assets/cellImage2.png";
+import cell2 from "../assets/newCellImage2.png";
 import img2 from "../assets/image2.png";
 import { motion } from "motion/react";
 import Navbar from "../components/navbar";
