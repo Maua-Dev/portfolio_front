@@ -1,14 +1,14 @@
 import MemberCard from "./memberCard";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import type { HomeCarouselMember } from "../types/memberInfo";
+import { FALLBACK_PROFILE_IMAGE_URL } from "../utils/constants";
 
-type Member = { profileImage: string; name: string; area: string };
-type MembersCarouselProps = { members: Member[] };
+type MembersCarouselProps = { members: HomeCarouselMember[] };
 
 const VISIBLE_ITEMS = 5;
 const CYCLES = 5;
 const MID_CYCLE = Math.floor(CYCLES / 2);
 const CENTER_OFFSET = Math.floor(VISIBLE_ITEMS / 2);
-
 
 export default function MembersCarousel({ members }: MembersCarouselProps) {
   const trackRef = useRef<HTMLDivElement>(null);
@@ -33,18 +33,17 @@ export default function MembersCarousel({ members }: MembersCarouselProps) {
   }, []);
 
   const updateCenterLogicalIndex = useCallback(() => {
-  const track = trackRef.current;
-  const w = getCardWidth();
-  if (!track || !w || !itemsPerCycle) return;
+    const track = trackRef.current;
+    const w = getCardWidth();
+    if (!track || !w || !itemsPerCycle) return;
 
-  const visualIndexLeft = Math.round(track.scrollLeft / w);
-  const visualIndexCenter = visualIndexLeft + CENTER_OFFSET;
-  const logical =
-    ((visualIndexCenter % itemsPerCycle) + itemsPerCycle) % itemsPerCycle;
+    const visualIndexLeft = Math.round(track.scrollLeft / w);
+    const visualIndexCenter = visualIndexLeft + CENTER_OFFSET;
+    const logical =
+      ((visualIndexCenter % itemsPerCycle) + itemsPerCycle) % itemsPerCycle;
 
-  setCenterLogicalIndex(logical);
-}, [getCardWidth, itemsPerCycle]);
-
+    setCenterLogicalIndex(logical);
+  }, [getCardWidth, itemsPerCycle]);
 
   const getScrollIndex = () => {
     const track = trackRef.current;
@@ -77,7 +76,7 @@ export default function MembersCarousel({ members }: MembersCarouselProps) {
         updateCenterLogicalIndex();
       });
     },
-    [updateCenterLogicalIndex]
+    [updateCenterLogicalIndex],
   );
 
   const handleScroll = () => {
@@ -136,10 +135,10 @@ export default function MembersCarousel({ members }: MembersCarouselProps) {
   };
 
   const circularDistance = (a: number, b: number, mod: number) => {
-    let d = ((a - b) % mod + mod) % mod;
+    let d = (((a - b) % mod) + mod) % mod;
     if (d > mod / 2) d -= mod;
     return d;
-    };
+  };
 
   return (
     <div className="relative w-full">
@@ -173,7 +172,7 @@ export default function MembersCarousel({ members }: MembersCarouselProps) {
             const dist = circularDistance(
               logicalIdx,
               centerLogicalIndex,
-              itemsPerCycle || 1
+              itemsPerCycle || 1,
             );
 
             const scales = [0.5, 0.75, 1, 0.75, 0.5];
@@ -194,7 +193,7 @@ export default function MembersCarousel({ members }: MembersCarouselProps) {
                   }}
                 >
                   <MemberCard
-                    image={member.profileImage}
+                    image={member.photoPath ?? FALLBACK_PROFILE_IMAGE_URL}
                     name={member.name}
                     area={member.area}
                   />

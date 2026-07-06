@@ -1,17 +1,10 @@
 import QuoteCard from "./quoteCard";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-
-type MemberData = {
-  profileImage: string;
-  name: string;
-  course: string;
-  courseYear: number;
-  area: string;
-  quote: string;
-};
+import type { QuoteCarouselMember } from "../types/memberInfo";
+import { FALLBACK_PROFILE_IMAGE_URL } from "../utils/constants";
 
 type QuoteCarouselProps = {
-  members: MemberData[];
+  members: QuoteCarouselMember[];
 };
 
 const CYCLES = 5;
@@ -83,7 +76,7 @@ export default function QuoteCarousel({ members }: QuoteCarouselProps) {
         updateCenterLogicalIndex();
       });
     },
-    [updateCenterLogicalIndex]
+    [updateCenterLogicalIndex],
   );
 
   const handleScroll = () => {
@@ -142,7 +135,7 @@ export default function QuoteCarousel({ members }: QuoteCarouselProps) {
   };
 
   const circularDistance = (a: number, b: number, mod: number) => {
-    let d = ((a - b) % mod + mod) % mod;
+    let d = (((a - b) % mod) + mod) % mod;
     if (d > mod / 2) d -= mod;
     return d;
   };
@@ -152,7 +145,7 @@ export default function QuoteCarousel({ members }: QuoteCarouselProps) {
       <button
         aria-label="Anterior"
         onClick={() => handleArrowClick("left")}
-        className="absolute left-[-2rem] top-1/2 -translate-y-1/2 z-10 rounded-full p-2 bg-white/80 shadow hover:bg-white focus:outline-none" 
+        className="absolute left-[-2rem] top-1/2 -translate-y-1/2 z-10 rounded-full p-2 bg-white/80 shadow hover:bg-white focus:outline-none"
       >
         ‹
       </button>
@@ -179,7 +172,7 @@ export default function QuoteCarousel({ members }: QuoteCarouselProps) {
             const dist = circularDistance(
               logicalIdx,
               centerLogicalIndex,
-              itemsPerCycle || 1
+              itemsPerCycle || 1,
             );
 
             const scales = [0.5, 0.75, 1, 0.75, 0.5];
@@ -200,9 +193,9 @@ export default function QuoteCarousel({ members }: QuoteCarouselProps) {
                   }}
                 >
                   <QuoteCard
-                    image={member.profileImage}
+                    image={member.photoPath ?? FALLBACK_PROFILE_IMAGE_URL}
                     name={member.name}
-                    area={member.area}
+                    area={member.role}
                     quote={member.quote}
                   />
                 </div>
