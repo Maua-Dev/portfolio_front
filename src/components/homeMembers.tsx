@@ -76,6 +76,19 @@ export default function Members() {
     };
   }, [filteredMembers]);
 
+  const scrollByPage = (direction: 1 | -1) => {
+    const container = carouselRef.current;
+    if (!container) return;
+    const containerWidth = container.offsetWidth;
+    container.scrollBy({
+      left: direction * containerWidth,
+      behavior: "smooth",
+    });
+  };
+
+  const canScrollLeft = currentPage > 0;
+  const canScrollRight = currentPage < pagesCount - 1;
+
   return (
     <section className="py-12 bg-gray-50">
       <h2 className="text-3xl font-bold text-center mb-8">Membros</h2>
@@ -102,38 +115,92 @@ export default function Members() {
             ))}
           </div>
 
-          <div
-            className="w-full overflow-x-auto px-4 scrollbar-hide"
-            ref={carouselRef}
-          >
-            <div className="flex gap-4 flex-nowrap scroll-smooth snap-x snap-mandatory">
-              {filteredMembers.map((m, i) => (
-                <div
-                  key={m.email ?? m.name ?? i}
-                  className="bg-white rounded-xl shadow-md p-6 flex-shrink-0 snap-start flex flex-col items-center text-center
-                    min-w-[220px] sm:min-w-[250px] md:min-w-[280px] lg:min-w-[320px] min-h-[250px]"
-                >
-                  <img
-                    src={m.photoPath ?? FALLBACK_PROFILE_IMAGE_URL}
-                    alt={m.name}
-                    className="w-20 h-20 rounded-full object-cover mb-4"
-                  />
-                  <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                    {m.name}
-                  </h3>
-                  {m.phone && (
-                    <p className="text-base text-gray-700 mb-1">{m.phone}</p>
-                  )}
-                  {m.email && (
-                    <a
-                      href={`mailto:${m.email}`}
-                      className="text-base text-purple-700 underline mb-1"
-                    >
-                      {m.email}
-                    </a>
-                  )}
-                </div>
-              ))}
+          <div className="relative">
+            {/* Left arrow */}
+            <button
+              type="button"
+              onClick={() => scrollByPage(-1)}
+              disabled={!canScrollLeft}
+              aria-label="Scroll left"
+              className={`hidden sm:flex absolute left-1 top-1/2 -translate-y-1/2 z-10 items-center justify-center
+                w-10 h-10 rounded-full bg-white shadow-md transition-opacity
+                ${canScrollLeft ? "opacity-100 hover:bg-gray-100" : "opacity-0 pointer-events-none"}`}
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth={2}
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className="w-5 h-5 text-purple-700"
+              >
+                <path d="M15 18l-6-6 6-6" />
+              </svg>
+            </button>
+
+            {/* Right arrow */}
+            <button
+              type="button"
+              onClick={() => scrollByPage(1)}
+              disabled={!canScrollRight}
+              aria-label="Scroll right"
+              className={`hidden sm:flex absolute right-1 top-1/2 -translate-y-1/2 z-10 items-center justify-center
+                w-10 h-10 rounded-full bg-white shadow-md transition-opacity
+                ${canScrollRight ? "opacity-100 hover:bg-gray-100" : "opacity-0 pointer-events-none"}`}
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth={2}
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className="w-5 h-5 text-purple-700"
+              >
+                <path d="M9 18l6-6-6-6" />
+              </svg>
+            </button>
+
+            <div
+              className="w-full overflow-x-auto px-4 scrollbar-hide"
+              ref={carouselRef}
+            >
+              <div
+                className={`flex gap-4 flex-nowrap scroll-smooth snap-x snap-mandatory ${
+                  pagesCount <= 1 ? "justify-center" : ""
+                }`}
+              >
+                {filteredMembers.map((m, i) => (
+                  <div
+                    key={m.email ?? m.name ?? i}
+                    className="bg-white rounded-xl shadow-md p-6 flex-shrink-0 snap-start flex flex-col items-center text-center
+                      min-w-[220px] sm:min-w-[250px] md:min-w-[280px] lg:min-w-[320px] min-h-[250px]"
+                  >
+                    <img
+                      src={m.photoPath ?? FALLBACK_PROFILE_IMAGE_URL}
+                      alt={m.name}
+                      className="w-20 h-20 rounded-full object-cover mb-4"
+                    />
+                    <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                      {m.name}
+                    </h3>
+                    {m.phone && (
+                      <p className="text-base text-gray-700 mb-1">{m.phone}</p>
+                    )}
+                    {m.email && (
+                      <a
+                        href={`mailto:${m.email}`}
+                        className="text-base text-purple-700 underline mb-1"
+                      >
+                        {m.email}
+                      </a>
+                    )}
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
 
