@@ -4,6 +4,6 @@ type InfoComponentDescriptionTypes = {
 
 export default function InfoComponentDescription({description}: InfoComponentDescriptionTypes) {
     return(
-        <p className="mb-12">{description}</p>
+        <p className="mb-6 md:mb-12 text-sm sm:text-base max-w-md mx-auto md:mx-0">{description}</p>
     );
 }

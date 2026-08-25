@@ -9,15 +9,16 @@ type QuoteCarouselProps = {
 
 const CYCLES = 5;
 const MID_CYCLE = Math.floor(CYCLES / 2);
-const CARD_WIDTH = 400;
 const GAP = 8;
-const ITEM_WIDTH = CARD_WIDTH + GAP;
+const FALLBACK_ITEM_WIDTH = 408;
 
 export default function QuoteCarousel({ members }: QuoteCarouselProps) {
   const trackRef = useRef<HTMLDivElement>(null);
+  const firstItemRef = useRef<HTMLDivElement | null>(null);
 
   const [centerLogicalIndex, setCenterLogicalIndex] = useState(0);
   const [instantMode, setInstantMode] = useState(false);
+  const [itemWidth, setItemWidth] = useState(FALLBACK_ITEM_WIDTH);
 
   const scrollTimeout = useRef<number | null>(null);
   const isJumping = useRef(false);
@@ -27,10 +28,27 @@ export default function QuoteCarousel({ members }: QuoteCarouselProps) {
   }, [members]);
 
   const itemsPerCycle = members.length;
+  useEffect(() => {
+    const el = firstItemRef.current;
+    if (!el) return;
 
-  const getCardWidth = useCallback(() => {
-    return ITEM_WIDTH;
-  }, []);
+    const update = () => {
+      const rect = el.getBoundingClientRect();
+      if (rect.width) setItemWidth(rect.width + GAP);
+    };
+    update();
+
+    const ro = new ResizeObserver(update);
+    ro.observe(el);
+    window.addEventListener("resize", update);
+
+    return () => {
+      ro.disconnect();
+      window.removeEventListener("resize", update);
+    };
+  }, [displayMembers]);
+
+  const getCardWidth = useCallback(() => itemWidth, [itemWidth]);
 
   const updateCenterLogicalIndex = useCallback(() => {
     const track = trackRef.current;
@@ -145,14 +163,14 @@ export default function QuoteCarousel({ members }: QuoteCarouselProps) {
       <button
         aria-label="Anterior"
         onClick={() => handleArrowClick("left")}
-        className="absolute left-[-2rem] top-1/2 -translate-y-1/2 z-10 rounded-full p-2 bg-white/80 shadow hover:bg-white focus:outline-none"
+        className="absolute left-1 sm:left-2 top-1/2 -translate-y-1/2 z-10 rounded-full w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center bg-white/80 shadow hover:bg-white focus:outline-none"
       >
         ‹
       </button>
       <button
         aria-label="Próximo"
         onClick={() => handleArrowClick("right")}
-        className="absolute right-[-2rem] top-1/2 -translate-y-1/2 z-10 rounded-full p-2 bg-white/80 shadow hover:bg-white focus:outline-none"
+        className="absolute right-1 sm:right-2 top-1/2 -translate-y-1/2 z-10 rounded-full w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center bg-white/80 shadow hover:bg-white focus:outline-none"
       >
         ›
       </button>
@@ -160,7 +178,7 @@ export default function QuoteCarousel({ members }: QuoteCarouselProps) {
       <div
         ref={trackRef}
         onScroll={handleScroll}
-        className="w-full overflow-x-auto scroll-smooth snap-x snap-mandatory [scrollbar-width:none] [-ms-overflow-style:none] px-4 py-6 pb-20"
+        className="w-full overflow-x-auto scroll-smooth snap-x snap-mandatory [scrollbar-width:none] [-ms-overflow-style:none] px-4 py-6 pb-16 sm:pb-20"
       >
         <div className="flex items-end gap-2 min-w-full [&::-webkit-scrollbar]:hidden">
           {displayMembers.map((member, idx) => {
@@ -175,13 +193,12 @@ export default function QuoteCarousel({ members }: QuoteCarouselProps) {
               itemsPerCycle || 1,
             );
 
-            const scales = [0.5, 0.75, 1, 0.75, 0.5];
-            let scale = 0.5;
-            if (dist >= -2 && dist <= 2) scale = scales[dist + 2];
+            const scale = Math.max(0.5, 1 - 0.25 * Math.abs(dist));
 
             return (
               <div
                 key={`${member.name}-${idx}`}
+                ref={idx === 0 ? firstItemRef : undefined}
                 className="shrink-0 snap-start flex justify-center items-end"
               >
                 <div

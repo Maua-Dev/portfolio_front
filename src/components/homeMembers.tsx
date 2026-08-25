@@ -11,6 +11,8 @@ export default function Members() {
   const [areaFilter, setAreaFilter] = useState("All");
   const [currentPage, setCurrentPage] = useState(0);
   const [pagesCount, setPagesCount] = useState(1);
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(false);
   const carouselRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
@@ -34,60 +36,48 @@ export default function Members() {
     const container = carouselRef.current;
     if (!container) return;
 
-    const updatePagination = () => {
-      const containerWidth = container.offsetWidth;
-      if (!containerWidth) {
-        setPagesCount(1);
-        setCurrentPage(0);
-        return;
-      }
-      const totalScrollWidth = container.scrollWidth;
-      const pageCount = Math.max(
-        1,
-        Math.ceil(totalScrollWidth / containerWidth),
-      );
-      setPagesCount(pageCount);
-      setCurrentPage((prev) => Math.min(prev, pageCount - 1));
-    };
+    container.scrollTo({ left: 0, behavior: "auto" });
 
-    const handleScroll = () => {
-      const containerWidth = container.offsetWidth;
-      if (!containerWidth) return;
+    const EPSILON = 4;
+
+    const evaluateScrollState = () => {
+      const containerWidth = container.clientWidth;
+      const scrollWidth = container.scrollWidth;
       const scrollLeft = container.scrollLeft;
-      const current = Math.round(scrollLeft / containerWidth);
-      setCurrentPage((_) =>
-        Math.max(
-          0,
-          Math.min(
-            current,
-            Math.max(0, Math.ceil(container.scrollWidth / containerWidth) - 1),
-          ),
-        ),
-      );
+      const maxScroll = Math.max(0, scrollWidth - containerWidth);
+
+      const pageCount = containerWidth
+        ? Math.max(1, Math.round(scrollWidth / containerWidth))
+        : 1;
+      setPagesCount(pageCount);
+
+      const ratio = maxScroll > 0 ? scrollLeft / maxScroll : 0;
+      const page = Math.round(ratio * (pageCount - 1));
+      setCurrentPage(Math.max(0, Math.min(page, pageCount - 1)));
+
+      setCanScrollLeft(scrollLeft > EPSILON);
+      setCanScrollRight(scrollLeft < maxScroll - EPSILON);
     };
 
-    updatePagination();
-    container.addEventListener("scroll", handleScroll);
-    window.addEventListener("resize", updatePagination);
+    evaluateScrollState();
+    container.addEventListener("scroll", evaluateScrollState);
+    window.addEventListener("resize", evaluateScrollState);
 
     return () => {
-      container.removeEventListener("scroll", handleScroll);
-      window.removeEventListener("resize", updatePagination);
+      container.removeEventListener("scroll", evaluateScrollState);
+      window.removeEventListener("resize", evaluateScrollState);
     };
   }, [filteredMembers]);
 
   const scrollByPage = (direction: 1 | -1) => {
     const container = carouselRef.current;
     if (!container) return;
-    const containerWidth = container.offsetWidth;
+    const containerWidth = container.clientWidth;
     container.scrollBy({
       left: direction * containerWidth,
       behavior: "smooth",
     });
   };
-
-  const canScrollLeft = currentPage > 0;
-  const canScrollRight = currentPage < pagesCount - 1;
 
   return (
     <section className="py-12 bg-gray-50">
@@ -116,14 +106,13 @@ export default function Members() {
           </div>
 
           <div className="relative">
-            {/* Left arrow */}
             <button
               type="button"
               onClick={() => scrollByPage(-1)}
               disabled={!canScrollLeft}
               aria-label="Scroll left"
-              className={`hidden sm:flex absolute left-1 top-1/2 -translate-y-1/2 z-10 items-center justify-center
-                w-10 h-10 rounded-full bg-white shadow-md transition-opacity
+              className={`flex absolute left-0 sm:left-1 top-1/2 -translate-y-1/2 z-10 items-center justify-center
+                w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-white shadow-md transition-opacity
                 ${canScrollLeft ? "opacity-100 hover:bg-gray-100" : "opacity-0 pointer-events-none"}`}
             >
               <svg
@@ -134,20 +123,19 @@ export default function Members() {
                 strokeWidth={2}
                 strokeLinecap="round"
                 strokeLinejoin="round"
-                className="w-5 h-5 text-purple-700"
+                className="w-4 h-4 sm:w-5 sm:h-5 text-purple-700"
               >
                 <path d="M15 18l-6-6 6-6" />
               </svg>
             </button>
 
-            {/* Right arrow */}
             <button
               type="button"
               onClick={() => scrollByPage(1)}
               disabled={!canScrollRight}
               aria-label="Scroll right"
-              className={`hidden sm:flex absolute right-1 top-1/2 -translate-y-1/2 z-10 items-center justify-center
-                w-10 h-10 rounded-full bg-white shadow-md transition-opacity
+              className={`flex absolute right-0 sm:right-1 top-1/2 -translate-y-1/2 z-10 items-center justify-center
+                w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-white shadow-md transition-opacity
                 ${canScrollRight ? "opacity-100 hover:bg-gray-100" : "opacity-0 pointer-events-none"}`}
             >
               <svg
@@ -158,14 +146,14 @@ export default function Members() {
                 strokeWidth={2}
                 strokeLinecap="round"
                 strokeLinejoin="round"
-                className="w-5 h-5 text-purple-700"
+                className="w-4 h-4 sm:w-5 sm:h-5 text-purple-700"
               >
                 <path d="M9 18l6-6-6-6" />
               </svg>
             </button>
 
             <div
-              className="w-full overflow-x-auto px-4 scrollbar-hide"
+              className="w-full overflow-x-auto px-8 sm:px-12 scrollbar-hide"
               ref={carouselRef}
             >
               <div

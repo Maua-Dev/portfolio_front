@@ -37,24 +37,6 @@ const eventos: Evento[] = [
     descricao:
       "Explore os projetos da nossa entidade! Iniciativas que conectam, inovam e trazem grandes resultados.",
   },
-  // {
-  //   titulo: "Comunicação",
-  //   imagem: imgComunicacao,
-  //   descricao:
-  //     "Explore os projetos da nossa entidade! Iniciativas que conectam, inovam e trazem grandes resultados.",
-  // },
-  // {
-  //   titulo: "Estratégias",
-  //   imagem: imgEstrategia,
-  //   descricao:
-  //     "Explore os projetos da nossa entidade! Iniciativas que conectam, inovam e trazem grandes resultados.",
-  // },
-  // {
-  //   titulo: "Liderança",
-  //   imagem: imgLideranca,
-  //   descricao:
-  //     "Explore os projetos da nossa entidade! Iniciativas que conectam, inovam e trazem grandes resultados.",
-  // },
   {
     titulo: "BattleSnake",
     imagem: battlesnake,
@@ -79,24 +61,24 @@ const Cards: React.FC = () => {
   const { isLoggedIn } = useAuth();
 
   return (
-    <section className="bg-coolWhite py-16 px-6 md:px-12">
-      <h2 className="text-4xl font-bold text-left text-gray-800 mb-12 max-w-6xl mx-auto">
+    <section className="bg-coolWhite py-10 sm:py-16 px-4 sm:px-6 md:px-12">
+      <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-left text-gray-800 mb-8 sm:mb-12 max-w-6xl mx-auto">
         Últimos Eventos
       </h2>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8 max-w-6xl mx-auto">
         {eventos.map((evento, index) => (
           <div
             key={index}
             className="block transform transition-all duration-300 hover:-translate-y-1 hover:shadow-lg rounded-lg overflow-hidden bg-white"
           >
-            <div className="relative h-48 w-full overflow-hidden">
+            <div className="relative h-40 sm:h-48 w-full overflow-hidden">
               <img
                 src={evento.imagem}
                 alt={evento.titulo}
                 className="object-cover w-full h-full transition-transform duration-300 hover:scale-105"
               />
-              <div className="absolute bottom-0 left-0 bg-black bg-opacity-60 text-white px-4 py-2 font-semibold text-lg">
+              <div className="absolute bottom-0 left-0 bg-black bg-opacity-60 text-white px-3 sm:px-4 py-2 font-semibold text-base sm:text-lg">
                 {evento.titulo}
               </div>
             </div>
