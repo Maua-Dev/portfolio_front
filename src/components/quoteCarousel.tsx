@@ -1,0 +1,226 @@
+import QuoteCard from "./quoteCard";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import type { QuoteCarouselMember } from "../types/memberInfo";
+import { FALLBACK_PROFILE_IMAGE_URL } from "../utils/constants";
+
+type QuoteCarouselProps = {
+  members: QuoteCarouselMember[];
+};
+
+const CYCLES = 5;
+const MID_CYCLE = Math.floor(CYCLES / 2);
+const GAP = 8;
+const FALLBACK_ITEM_WIDTH = 408;
+
+export default function QuoteCarousel({ members }: QuoteCarouselProps) {
+  const trackRef = useRef<HTMLDivElement>(null);
+  const firstItemRef = useRef<HTMLDivElement | null>(null);
+
+  const [centerLogicalIndex, setCenterLogicalIndex] = useState(0);
+  const [instantMode, setInstantMode] = useState(false);
+  const [itemWidth, setItemWidth] = useState(FALLBACK_ITEM_WIDTH);
+
+  const scrollTimeout = useRef<number | null>(null);
+  const isJumping = useRef(false);
+  const displayMembers = useMemo(() => {
+    if (!members.length) return [];
+    return Array.from({ length: CYCLES }, () => members).flat();
+  }, [members]);
+
+  const itemsPerCycle = members.length;
+  useEffect(() => {
+    const el = firstItemRef.current;
+    if (!el) return;
+
+    const update = () => {
+      const rect = el.getBoundingClientRect();
+      if (rect.width) setItemWidth(rect.width + GAP);
+    };
+    update();
+
+    const ro = new ResizeObserver(update);
+    ro.observe(el);
+    window.addEventListener("resize", update);
+
+    return () => {
+      ro.disconnect();
+      window.removeEventListener("resize", update);
+    };
+  }, [displayMembers]);
+
+  const getCardWidth = useCallback(() => itemWidth, [itemWidth]);
+
+  const updateCenterLogicalIndex = useCallback(() => {
+    const track = trackRef.current;
+    const w = getCardWidth();
+    if (!track || !w || !itemsPerCycle) return;
+
+    const scrollCenter = track.scrollLeft + track.clientWidth / 2;
+    const visualIndexCenter = Math.round((scrollCenter - w / 2) / w);
+    const logical =
+      ((visualIndexCenter % itemsPerCycle) + itemsPerCycle) % itemsPerCycle;
+
+    setCenterLogicalIndex(logical);
+  }, [getCardWidth, itemsPerCycle]);
+
+  const getScrollIndex = () => {
+    const track = trackRef.current;
+    const w = getCardWidth();
+    if (!track || !w) return 0;
+    return track.scrollLeft / w;
+  };
+
+  const jumpWithoutAnimation = useCallback(
+    (left: number) => {
+      const track = trackRef.current;
+      if (!track) return;
+
+      isJumping.current = true;
+      setInstantMode(true);
+
+      const prevSnap = track.style.scrollSnapType;
+      const prevBehavior = track.style.scrollBehavior;
+
+      track.style.scrollSnapType = "none";
+      track.style.scrollBehavior = "auto";
+      track.scrollTo({ left });
+      track.getBoundingClientRect();
+
+      requestAnimationFrame(() => {
+        track.style.scrollSnapType = prevSnap || "";
+        track.style.scrollBehavior = prevBehavior || "";
+        isJumping.current = false;
+        setInstantMode(false);
+        updateCenterLogicalIndex();
+      });
+    },
+    [updateCenterLogicalIndex],
+  );
+
+  const handleScroll = () => {
+    if (isJumping.current) return;
+
+    updateCenterLogicalIndex();
+
+    if (scrollTimeout.current) clearTimeout(scrollTimeout.current);
+    scrollTimeout.current = window.setTimeout(() => {
+      const track = trackRef.current;
+      const w = getCardWidth();
+      if (!track || !w || !itemsPerCycle) return;
+
+      const idx = getScrollIndex();
+      const firstKeep = itemsPerCycle * (MID_CYCLE - 1);
+      const lastKeep = itemsPerCycle * (MID_CYCLE + 1);
+
+      if (idx < firstKeep) {
+        jumpWithoutAnimation(track.scrollLeft + itemsPerCycle * w);
+        return;
+      }
+      if (idx > lastKeep) {
+        jumpWithoutAnimation(track.scrollLeft - itemsPerCycle * w);
+        return;
+      }
+    }, 120);
+  };
+
+  useEffect(() => {
+    const track = trackRef.current;
+    if (!track || !displayMembers.length || !itemsPerCycle) return;
+
+    const setInitialPosition = () => {
+      const w = getCardWidth();
+      if (!w) return;
+      const initialLeft = w * itemsPerCycle * MID_CYCLE;
+      jumpWithoutAnimation(initialLeft);
+    };
+    setTimeout(setInitialPosition, 0);
+
+    const handleResize = () => setInitialPosition();
+    window.addEventListener("resize", handleResize);
+
+    return () => {
+      if (scrollTimeout.current) clearTimeout(scrollTimeout.current);
+      window.removeEventListener("resize", handleResize);
+    };
+  }, [displayMembers, itemsPerCycle, getCardWidth, jumpWithoutAnimation]);
+
+  const handleArrowClick = (dir: "left" | "right") => {
+    const track = trackRef.current;
+    const w = getCardWidth();
+    if (!track || !w) return;
+    const newLeft = track.scrollLeft + w * (dir === "left" ? -1 : 1);
+    track.scrollTo({ left: newLeft, behavior: "smooth" });
+  };
+
+  const circularDistance = (a: number, b: number, mod: number) => {
+    let d = (((a - b) % mod) + mod) % mod;
+    if (d > mod / 2) d -= mod;
+    return d;
+  };
+
+  return (
+    <div className="relative w-full">
+      <button
+        aria-label="Anterior"
+        onClick={() => handleArrowClick("left")}
+        className="absolute left-1 sm:left-2 top-1/2 -translate-y-1/2 z-10 rounded-full w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center bg-white/80 shadow hover:bg-white focus:outline-none"
+      >
+        ‹
+      </button>
+      <button
+        aria-label="Próximo"
+        onClick={() => handleArrowClick("right")}
+        className="absolute right-1 sm:right-2 top-1/2 -translate-y-1/2 z-10 rounded-full w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center bg-white/80 shadow hover:bg-white focus:outline-none"
+      >
+        ›
+      </button>
+
+      <div
+        ref={trackRef}
+        onScroll={handleScroll}
+        className="w-full overflow-x-auto scroll-smooth snap-x snap-mandatory [scrollbar-width:none] [-ms-overflow-style:none] px-4 py-6 pb-16 sm:pb-20"
+      >
+        <div className="flex items-end gap-2 min-w-full [&::-webkit-scrollbar]:hidden">
+          {displayMembers.map((member, idx) => {
+            const logicalIdx =
+              itemsPerCycle > 0
+                ? ((idx % itemsPerCycle) + itemsPerCycle) % itemsPerCycle
+                : 0;
+
+            const dist = circularDistance(
+              logicalIdx,
+              centerLogicalIndex,
+              itemsPerCycle || 1,
+            );
+
+            const scale = Math.max(0.5, 1 - 0.25 * Math.abs(dist));
+
+            return (
+              <div
+                key={`${member.name}-${idx}`}
+                ref={idx === 0 ? firstItemRef : undefined}
+                className="shrink-0 snap-start flex justify-center items-end"
+              >
+                <div
+                  className={`${instantMode ? "" : "transition-transform duration-300"} will-change-transform`}
+                  style={{
+                    transform: `scale(${scale})`,
+                    transformOrigin: "bottom center",
+                    transition: instantMode ? "none" : undefined,
+                  }}
+                >
+                  <QuoteCard
+                    image={member.photoPath ?? FALLBACK_PROFILE_IMAGE_URL}
+                    name={member.name}
+                    area={member.role}
+                    quote={member.quote}
+                  />
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+}
