@@ -48,34 +48,34 @@ export default function Project({ project, side, isLoggedIn }: ProjectProps) {
   return (
     <motion.div
       className={cn(
-        "relative w-full h-[80vh] flex items-center justify-center mt-4 px-8",
-        { "flex-row-reverse": side === "right" }
+        "relative w-full min-h-[70vh] md:h-[80vh] flex flex-col md:flex-row items-center justify-center mt-4 px-4 sm:px-6 md:px-8 gap-6 md:gap-0",
+        { "md:flex-row-reverse": side === "right" }
       )}
       ref={ref}
     >
-      <div className="flex w-1/2 z-10 h-full flex-col">
+      <div className="flex w-3/4 sm:w-1/2 md:w-1/2 z-10 h-48 sm:h-64 md:h-full flex-col">
         <motion.img
           src={project.cellImage}
           alt=""
           style={{ opacity, x: cellX }}
-          className="h-full w-auto"
+          className="h-full w-auto mx-auto"
         />
       </div>
 
-      <div className="flex w-1/2 h-full flex-col gap-4 items-center z-10 font-poppins text-coolWhite">
+      <div className="flex w-full md:w-1/2 h-auto md:h-full flex-col gap-4 items-center z-10 font-poppins text-coolWhite">
         <motion.img
           src={project.image}
           alt=""
           style={{ opacity, x: imageX }}
-          className="h-2/6 w-auto mb-1/6"
+          className="h-32 sm:h-40 md:h-2/6 w-auto mb-1/6"
         />
 
-        <div className="flex flex-col items-start mt-10 w-1/2">
-          <h1 className="text-5xl font-bold">Tecnologias</h1>
-          <p className="text-xl mt-2">Frontend: {project.frontend}</p>
-          <p className="text-xl mt-2">Backend: {project.backend}</p>
-          <p className="text-sm mt-8 text-justify">{project.description}</p>
-          <button className="mt-8 mx-auto hover:cursor-pointer rounded-full px-4 py-2 bg-transparent border-2 border-coolWhite hover:bg-coolWhite hover:text-black transition-colors duration-300">
+        <div className="flex flex-col items-center md:items-start text-center md:text-left mt-4 md:mt-10 w-full sm:w-3/4 md:w-1/2 px-4 md:px-0">
+          <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold">Tecnologias</h1>
+          <p className="text-base sm:text-lg md:text-xl mt-2">Frontend: {project.frontend}</p>
+          <p className="text-base sm:text-lg md:text-xl mt-2">Backend: {project.backend}</p>
+          <p className="text-sm mt-6 md:mt-8 text-justify">{project.description}</p>
+          <button className="mt-6 md:mt-8 mx-auto hover:cursor-pointer rounded-full px-4 py-2 bg-transparent border-2 border-coolWhite hover:bg-coolWhite hover:text-black transition-colors duration-300">
             <p>Saiba Mais</p>
           </button>
         </div>
@@ -83,8 +83,8 @@ export default function Project({ project, side, isLoggedIn }: ProjectProps) {
 
       <motion.div
         className={cn(
-          "absolute h-[90%] w-10/11 bottom-0 z-0 duration-75",
-          side === "left" ? "left-0 rounded-r-xl" : "right-0 rounded-l-xl"
+          "absolute h-[95%] sm:h-[90%] w-full sm:w-10/11 bottom-0 z-0 duration-75",
+          side === "left" ? "sm:left-0 sm:rounded-r-xl" : "sm:right-0 sm:rounded-l-xl"
         )}
         style={{ y: parallaxY, backgroundColor: project.color }}
       >

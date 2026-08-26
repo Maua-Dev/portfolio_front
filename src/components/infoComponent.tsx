@@ -9,7 +9,7 @@ type InfoComponentProps = {
 
 export default function InfoComponent({title, description}: InfoComponentProps) {
     return (
-        <div>
+        <div className="flex flex-col items-center md:items-start text-center md:text-left">
             <InfoComponentTitle title={title}/>
             <InfoComponentDescription description={description}/>
             <InfoComponentTags/>

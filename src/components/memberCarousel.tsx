@@ -1,17 +1,29 @@
 import MemberCard from "./memberCard";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import type { HomeCarouselMember } from "../types/memberInfo";
+import { FALLBACK_PROFILE_IMAGE_URL } from "../utils/constants";
 
-type Member = { profileImage: string; name: string; area: string };
-type MembersCarouselProps = { members: Member[] };
+type MembersCarouselProps = { members: HomeCarouselMember[] };
 
-const VISIBLE_ITEMS = 5;
 const CYCLES = 5;
 const MID_CYCLE = Math.floor(CYCLES / 2);
-const CENTER_OFFSET = Math.floor(VISIBLE_ITEMS / 2);
 
+function useVisibleItems() {
+  const [visibleItems, setVisibleItems] = useState(5);
+  useEffect(() => {
+    const mq = window.matchMedia("(max-width: 639px)");
+    const update = () => setVisibleItems(mq.matches ? 3 : 5);
+    update();
+    mq.addEventListener("change", update);
+    return () => mq.removeEventListener("change", update);
+  }, []);
+  return visibleItems;
+}
 
 export default function MembersCarousel({ members }: MembersCarouselProps) {
   const trackRef = useRef<HTMLDivElement>(null);
+  const visibleItems = useVisibleItems();
+  const centerOffset = Math.floor(visibleItems / 2);
 
   const [centerLogicalIndex, setCenterLogicalIndex] = useState(0);
   const [instantMode, setInstantMode] = useState(false);
@@ -29,22 +41,21 @@ export default function MembersCarousel({ members }: MembersCarouselProps) {
   const getCardWidth = useCallback(() => {
     const track = trackRef.current;
     if (!track) return 0;
-    return track.clientWidth / VISIBLE_ITEMS;
-  }, []);
+    return track.clientWidth / visibleItems;
+  }, [visibleItems]);
 
   const updateCenterLogicalIndex = useCallback(() => {
-  const track = trackRef.current;
-  const w = getCardWidth();
-  if (!track || !w || !itemsPerCycle) return;
+    const track = trackRef.current;
+    const w = getCardWidth();
+    if (!track || !w || !itemsPerCycle) return;
 
-  const visualIndexLeft = Math.round(track.scrollLeft / w);
-  const visualIndexCenter = visualIndexLeft + CENTER_OFFSET;
-  const logical =
-    ((visualIndexCenter % itemsPerCycle) + itemsPerCycle) % itemsPerCycle;
+    const visualIndexLeft = Math.round(track.scrollLeft / w);
+    const visualIndexCenter = visualIndexLeft + centerOffset;
+    const logical =
+      ((visualIndexCenter % itemsPerCycle) + itemsPerCycle) % itemsPerCycle;
 
-  setCenterLogicalIndex(logical);
-}, [getCardWidth, itemsPerCycle]);
-
+    setCenterLogicalIndex(logical);
+  }, [getCardWidth, itemsPerCycle, centerOffset]);
 
   const getScrollIndex = () => {
     const track = trackRef.current;
@@ -77,7 +88,7 @@ export default function MembersCarousel({ members }: MembersCarouselProps) {
         updateCenterLogicalIndex();
       });
     },
-    [updateCenterLogicalIndex]
+    [updateCenterLogicalIndex],
   );
 
   const handleScroll = () => {
@@ -125,7 +136,7 @@ export default function MembersCarousel({ members }: MembersCarouselProps) {
       if (scrollTimeout.current) clearTimeout(scrollTimeout.current);
       window.removeEventListener("resize", handleResize);
     };
-  }, [displayMembers, itemsPerCycle, getCardWidth, jumpWithoutAnimation]);
+  }, [displayMembers, itemsPerCycle, getCardWidth, jumpWithoutAnimation, visibleItems]);
 
   const handleArrowClick = (dir: "left" | "right") => {
     const track = trackRef.current;
@@ -136,24 +147,24 @@ export default function MembersCarousel({ members }: MembersCarouselProps) {
   };
 
   const circularDistance = (a: number, b: number, mod: number) => {
-    let d = ((a - b) % mod + mod) % mod;
+    let d = (((a - b) % mod) + mod) % mod;
     if (d > mod / 2) d -= mod;
     return d;
-    };
+  };
 
   return (
     <div className="relative w-full">
       <button
         aria-label="Anterior"
         onClick={() => handleArrowClick("left")}
-        className="absolute left-2 top-1/2 -translate-y-1/2 z-10 rounded-full p-2 bg-white/80 shadow hover:bg-white focus:outline-none"
+        className="absolute left-1 sm:left-2 top-1/2 -translate-y-1/2 z-10 rounded-full w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center bg-white/80 shadow hover:bg-white focus:outline-none"
       >
         ‹
       </button>
       <button
         aria-label="Próximo"
         onClick={() => handleArrowClick("right")}
-        className="absolute right-2 top-1/2 -translate-y-1/2 z-10 rounded-full p-2 bg-white/80 shadow hover:bg-white focus:outline-none"
+        className="absolute right-1 sm:right-2 top-1/2 -translate-y-1/2 z-10 rounded-full w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center bg-white/80 shadow hover:bg-white focus:outline-none"
       >
         ›
       </button>
@@ -161,7 +172,7 @@ export default function MembersCarousel({ members }: MembersCarouselProps) {
       <div
         ref={trackRef}
         onScroll={handleScroll}
-        className="w-full overflow-x-auto scroll-smooth snap-x snap-mandatory [scrollbar-width:none] [-ms-overflow-style:none] px-4 py-6 pb-20"
+        className="w-full overflow-x-auto scroll-smooth snap-x snap-mandatory [scrollbar-width:none] [-ms-overflow-style:none] px-4 py-6 pb-16 sm:pb-20"
       >
         <div className="flex items-end gap-2 min-w-full [&::-webkit-scrollbar]:hidden">
           {displayMembers.map((member, idx) => {
@@ -173,17 +184,16 @@ export default function MembersCarousel({ members }: MembersCarouselProps) {
             const dist = circularDistance(
               logicalIdx,
               centerLogicalIndex,
-              itemsPerCycle || 1
+              itemsPerCycle || 1,
             );
 
-            const scales = [0.5, 0.75, 1, 0.75, 0.5];
-            let scale = 0.5;
-            if (dist >= -2 && dist <= 2) scale = scales[dist + 2];
+            const scale = Math.max(0.5, 1 - 0.25 * Math.abs(dist));
 
             return (
               <div
                 key={`${member.name}-${idx}`}
-                className="basis-1/5 shrink-0 snap-start flex justify-center items-end"
+                style={{ flexBasis: `${100 / visibleItems}%` }}
+                className="shrink-0 snap-start flex justify-center items-end"
               >
                 <div
                   className={`${instantMode ? "" : "transition-transform duration-300"} will-change-transform`}
@@ -194,7 +204,7 @@ export default function MembersCarousel({ members }: MembersCarouselProps) {
                   }}
                 >
                   <MemberCard
-                    image={member.profileImage}
+                    image={member.photoPath ?? FALLBACK_PROFILE_IMAGE_URL}
                     name={member.name}
                     area={member.area}
                   />
